@@ -1,17 +1,48 @@
 import { useCallback, useEffect, useState } from 'react';
-import { protocols, findProtocol } from './protocols';
+import { protocols, categories, findProtocol } from './protocols';
 import { SequenceDiagram } from './components/SequenceDiagram';
 import { StepControls, SPEEDS, type Speed } from './components/StepControls';
 import { StepDetail } from './components/StepDetail';
 import { PacketBuddy } from './components/PacketBuddy';
+import { SideNav } from './components/SideNav';
+import { useMediaQuery } from './lib/useMediaQuery';
 import { parseHash, toHash } from './lib/route';
 import { UI, loadMode, saveMode, type Mode } from './lib/text';
+
+function loadNavPref(): boolean {
+  try {
+    return localStorage.getItem('nav') !== 'closed';
+  } catch {
+    return true;
+  }
+}
+
+function saveNavPref(open: boolean): void {
+  try {
+    localStorage.setItem('nav', open ? 'open' : 'closed');
+  } catch {
+    /* 保存できなくても動作には影響しない */
+  }
+}
 
 export default function App() {
   const [route, setRoute] = useState(() => parseHash(window.location.hash));
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState<Speed>('normal');
   const [mode, setMode] = useState<Mode>(loadMode);
+  const narrow = useMediaQuery('(max-width: 900px)');
+  // PC では開いた状態、スマホでは閉じた状態から始める（PC での開閉は記憶する）
+  const [navPref, setNavPref] = useState<boolean>(() => loadNavPref());
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const navOpen = narrow ? drawerOpen : navPref;
+  const toggleNav = () => {
+    if (narrow) setDrawerOpen((o) => !o);
+    else
+      setNavPref((o) => {
+        saveNavPref(!o);
+        return !o;
+      });
+  };
 
   const protocol = findProtocol(route.protocolId) ?? protocols[0];
   const total = protocol.steps.length;
@@ -31,15 +62,21 @@ export default function App() {
   useEffect(() => saveMode(mode), [mode]);
   const ui = UI[mode];
 
-  const goTo = useCallback(
-    (n: number) => setRoute((r) => ({ ...r, step: Math.min(Math.max(n, 0), total) })),
-    [total],
-  );
+  const goTo = useCallback((n: number) => setRoute((r) => ({ ...r, step: Math.min(Math.max(n, 0), total) })), [total]);
 
   const selectProtocol = (id: string) => {
     setPlaying(false);
     setRoute({ protocolId: id, step: 0 });
+    if (narrow) setDrawerOpen(false);
   };
+
+  // スマホのメニューは Esc で閉じる
+  useEffect(() => {
+    if (!(narrow && drawerOpen)) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setDrawerOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [narrow, drawerOpen]);
 
   const togglePlay = useCallback(() => {
     if (playing) {
@@ -67,6 +104,7 @@ export default function App() {
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA')) return;
       if (e.altKey || e.ctrlKey || e.metaKey) return;
+      if (narrow && drawerOpen) return;
       if (e.key === 'ArrowRight') {
         setPlaying(false);
         goTo(current + 1);
@@ -86,11 +124,24 @@ export default function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [current, total, goTo, togglePlay]);
+  }, [current, total, goTo, togglePlay, narrow, drawerOpen]);
 
   return (
     <div className="app">
       <header className="top">
+        <button
+          type="button"
+          className={navOpen ? 'hamburger open' : 'hamburger'}
+          aria-expanded={navOpen}
+          aria-controls="sidenav"
+          aria-label={navOpen ? ui.closeMenu : ui.openMenu}
+          title={navOpen ? ui.closeMenu : ui.openMenu}
+          onClick={toggleNav}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
         <div className="brand">
           <PacketBuddy size={52} color="#ff9f43" accessory="wave" />
           <div>
@@ -99,68 +150,81 @@ export default function App() {
           </div>
         </div>
         <div className="mode" role="radiogroup" aria-label={ui.modeGroup}>
-          <button type="button" role="radio" aria-checked={mode === 'adult'} className={mode === 'adult' ? 'on' : ''} onClick={() => setMode('adult')}>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={mode === 'adult'}
+            className={mode === 'adult' ? 'on' : ''}
+            onClick={() => setMode('adult')}
+          >
             大人向け
           </button>
-          <button type="button" role="radio" aria-checked={mode === 'kid'} className={mode === 'kid' ? 'on' : ''} onClick={() => setMode('kid')}>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={mode === 'kid'}
+            className={mode === 'kid' ? 'on' : ''}
+            onClick={() => setMode('kid')}
+          >
             こども向け
           </button>
         </div>
       </header>
 
-      <nav className="protocols" aria-label={ui.pickProtocol}>
-        {protocols.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            className={p.id === protocol.id ? 'proto on' : 'proto'}
-            aria-pressed={p.id === protocol.id}
-            onClick={() => selectProtocol(p.id)}
-          >
-            <span className="proto-name">{p.name}</span>
-            <span className="proto-tag">{mode === 'kid' ? p.kidTagline : p.tagline}</span>
-          </button>
-        ))}
-      </nav>
-
-      <main className="stage">
-        <section className="panel panel-diagram" aria-label={ui.diagram}>
-          <SequenceDiagram
-            protocol={protocol}
+      <div className={navOpen ? 'shell nav-open' : 'shell'}>
+        {navOpen && (
+          <SideNav
+            id="sidenav"
+            categories={categories}
+            currentId={protocol.id}
             mode={mode}
-            current={current}
-            travelMs={SPEEDS[speed].travel}
-            onSelect={(i) => {
-              setPlaying(false);
-              goTo(i);
-            }}
+            label={ui.pickProtocol}
+            onSelect={selectProtocol}
+            onClose={narrow ? () => setDrawerOpen(false) : undefined}
+            closeLabel={ui.closeMenu}
           />
-        </section>
-        <section className="panel panel-detail" aria-live="polite">
-          <StepDetail protocol={protocol} current={current} mode={mode} />
-        </section>
-      </main>
+        )}
+        {narrow && drawerOpen && <div className="backdrop" onClick={() => setDrawerOpen(false)} aria-hidden="true" />}
+        <div className="content">
+          <main className="stage">
+            <section className="panel panel-diagram" aria-label={ui.diagram}>
+              <SequenceDiagram
+                protocol={protocol}
+                mode={mode}
+                current={current}
+                travelMs={SPEEDS[speed].travel}
+                onSelect={(i) => {
+                  setPlaying(false);
+                  goTo(i);
+                }}
+              />
+            </section>
+            <section className="panel panel-detail" aria-live="polite">
+              <StepDetail protocol={protocol} current={current} mode={mode} />
+            </section>
+          </main>
 
-      <p className="credit">
-        <abbr title="VISualize communication Protocols as Small, Cute, Stylized Characters.">VISP-SCSC</abbr> —{' '}
-        <b>VIS</b>ualize communication <b>P</b>rotocols as <b>S</b>mall, <b>C</b>ute, <b>S</b>tylized <b>C</b>haracters.
-      </p>
-
-      <footer className="dock">
-        <StepControls
-          current={current}
-          total={total}
-          playing={playing}
-          speed={speed}
-          mode={mode}
-          onChange={(n) => {
-            setPlaying(false);
-            goTo(n);
-          }}
-          onTogglePlay={togglePlay}
-          onSpeed={setSpeed}
-        />
-      </footer>
+          <footer className="dock">
+            <StepControls
+              current={current}
+              total={total}
+              playing={playing}
+              speed={speed}
+              mode={mode}
+              onChange={(n) => {
+                setPlaying(false);
+                goTo(n);
+              }}
+              onTogglePlay={togglePlay}
+              onSpeed={setSpeed}
+            />
+          </footer>
+          <p className="credit">
+            <abbr title="VISualize communication Protocols as Small, Cute, Stylized Characters.">VISP-SCSC</abbr> — <b>VIS</b>ualize
+            communication <b>P</b>rotocols as <b>S</b>mall, <b>C</b>ute, <b>S</b>tylized <b>C</b>haracters.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

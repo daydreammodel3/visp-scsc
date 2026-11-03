@@ -2,8 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { protocols } from './index';
 import { parseHash, toHash } from '../lib/route';
 import { rfcLabel, rfcUrl } from '../lib/rfc';
+import { inventoryAt } from '../lib/inventory';
+import { categories } from './index';
 
 describe('プロトコル定義', () => {
+  it('すべてのプロトコルがちょうど 1 つのカテゴリに入っている', () => {
+    const ids = categories.flatMap((c) => c.protocols.map((p) => p.id));
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.length).toBe(protocols.length);
+  });
+
   it('ID が重複していない', () => {
     const ids = protocols.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
@@ -30,9 +38,24 @@ describe('プロトコル定義', () => {
         for (const s of p.steps) {
           expect(actorIds, `${s.id}.from`).toContain(s.from);
           expect(actorIds, `${s.id}.to`).toContain(s.to);
-          expect(s.from, `${s.id} は自分宛て`).not.toBe(s.to);
           expect(phaseIds, `${s.id}.phase`).toContain(s.phase);
         }
+      });
+
+      it('持ち物（items / initial / gives）の参照が正しい', () => {
+        const actorIds = new Set(p.actors.map((a) => a.id));
+        const itemIds = new Set(Object.keys(p.items ?? {}));
+        const refs = [Object.entries(p.initial ?? {}), ...p.steps.map((s) => Object.entries(s.gives ?? {}))].flat();
+        if (refs.length > 0) expect(p.items, 'items が未定義').toBeDefined();
+        for (const [actor, ids] of refs) {
+          expect(actorIds).toContain(actor);
+          for (const id of ids) expect(itemIds).toContain(id);
+        }
+      });
+
+      it('ノード内の処理（from === to）は他のノードに持ち物を渡さない', () => {
+        for (const s of p.steps.filter((s) => s.from === s.to))
+          for (const actor of Object.keys(s.gives ?? {})) expect(actor, s.id).toBe(s.from);
       });
 
       it('すべてのフェーズが使われている', () => {
@@ -83,7 +106,7 @@ describe('ルーティング', () => {
   });
   it('不正な値は丸める', () => {
     expect(parseHash('#/nope/999').protocolId).toBe(protocols[0].id);
-    expect(parseHash('#/tls12/999').step).toBe(protocols[0].steps.length);
+    expect(parseHash('#/tls12/999').step).toBe(protocols.find((p) => p.id === 'tls12')!.steps.length);
     expect(parseHash('#/tls12/-4').step).toBe(0);
     expect(parseHash('').step).toBe(0);
   });
@@ -95,5 +118,39 @@ describe('RFC リンク', () => {
     expect(rfcUrl({ rfc: 8446, section: 'D.4' })).toBe('https://www.rfc-editor.org/rfc/rfc8446#appendix-D.4');
     expect(rfcLabel({ rfc: 8446, section: 'D.4' })).toBe('RFC 8446 Appendix D.4');
     expect(rfcLabel({ rfc: 5246 })).toBe('RFC 5246');
+  });
+});
+
+describe('鍵交換の持ち物', () => {
+  const holds = (pid: string, step: number, actor: string) =>
+    inventoryAt(protocols.find((p) => p.id === pid)!, step)[actor].map((h) => h.id);
+
+  it('DH: アリスとボブは共有秘密を持ち、イブは持たない', () => {
+    const dh = protocols.find((p) => p.id === 'dh')!;
+    const end = dh.steps.length;
+    expect(holds('dh', end, 'a')).toContain('s');
+    expect(holds('dh', end, 'b')).toContain('s');
+    expect(holds('dh', end, 'e')).not.toContain('s');
+    expect(holds('dh', end, 'e')).not.toContain('a');
+    expect(holds('dh', end, 'e')).not.toContain('b');
+  });
+
+  it('RSA: イブは公開鍵と暗号文だけを持つ', () => {
+    const p = protocols.find((p) => p.id === 'rsa-kex')!;
+    const eve = holds('rsa-kex', p.steps.length, 'e');
+    expect(eve).toContain('pub');
+    expect(eve).not.toContain('priv');
+    expect(eve).not.toContain('k');
+  });
+
+  it('共通鍵: 鍵を平文で送るとイブも復号できてしまう', () => {
+    const p = protocols.find((p) => p.id === 'symmetric')!;
+    expect(holds('symmetric', p.steps.length, 'e')).toEqual(expect.arrayContaining(['key', 'plain']));
+  });
+
+  it('新しく手に入れたものに fresh が付く', () => {
+    const inv = inventoryAt(protocols.find((p) => p.id === 'dh')!, 2);
+    expect(inv.a.find((h) => h.id === 'a')?.fresh).toBe(true);
+    expect(inv.a.find((h) => h.id === 'pg')?.fresh).toBe(false);
   });
 });

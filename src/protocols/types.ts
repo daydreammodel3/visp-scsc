@@ -18,7 +18,7 @@ export type Accessory =
   | 'ticket' // 次回用のチケット
   | 'moon'; // おしまい・切断
 
-export type ActorIcon = 'laptop' | 'server' | 'router';
+export type ActorIcon = 'laptop' | 'server' | 'router' | 'eve';
 
 export interface Actor {
   id: string;
@@ -45,6 +45,20 @@ export interface RfcRef {
   label?: string;
 }
 
+/** 鍵や値の種類。持ち物パネルでのバッジ表示に使う */
+export type ItemKind = 'public' | 'secret' | 'shared' | 'cipher' | 'plain';
+
+/** ノードが持つ鍵・値（持ち物パネルに表示される） */
+export interface KeyItem {
+  /** 大人向けの表示（例: "A = gᵃ mod p = 4"） */
+  label: string;
+  /** こども向けの表示 */
+  kidLabel: string;
+  kind: ItemKind;
+  /** 絵の具・鍵の色 */
+  color: string;
+}
+
 export interface Field {
   name: string;
   value: string;
@@ -54,6 +68,7 @@ export interface Field {
 export interface Step {
   id: string;
   from: string;
+  /** from と同じにすると、そのノードの中での処理（鍵の生成・計算など）として描かれる */
   to: string;
   /** プロトコル上のメッセージ名（例: ClientHello） */
   message: string;
@@ -64,6 +79,13 @@ export interface Step {
   encrypted?: boolean;
   /** 省略されることがあるメッセージ */
   optional?: boolean;
+  /** やってはいけない操作（赤い「危険」表示） */
+  danger?: boolean;
+  /**
+   * このステップのあとで各ノードが新しく手に入れる持ち物（Protocol.items の ID）。
+   * 送信者と受信者以外のノード（盗聴者など）を入れると、途中で盗み見たことを表す。
+   */
+  gives?: Record<string, string[]>;
   /** 大人向け: ひとことで言うと何をするメッセージか */
   summary: string;
   /** こども向け: ひとことタイトル */
@@ -92,4 +114,15 @@ export interface Protocol {
   actors: Actor[];
   phases: Phase[];
   steps: Step[];
+  /** 持ち物パネルで使う鍵・値の定義。省略するとパネルは表示されない */
+  items?: Record<string, KeyItem>;
+  /** 最初から各ノードが持っている持ち物 */
+  initial?: Record<string, string[]>;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  kidName: string;
+  protocols: Protocol[];
 }

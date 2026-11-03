@@ -2,6 +2,7 @@ import type { Protocol } from '../protocols/types';
 import { PacketBuddy } from './PacketBuddy';
 import { rfcLabel, rfcUrl } from '../lib/rfc';
 import { UI, type Mode } from '../lib/text';
+import { KeyInventory } from './KeyInventory';
 
 interface Props {
   protocol: Protocol;
@@ -49,7 +50,9 @@ export function StepDetail({ protocol, current, mode }: Props) {
 
       <div className="chips">
         <span className="chip">
-          {kid ? from.kidName : from.name} → {kid ? to.kidName : to.name}
+          {step.from === step.to
+            ? `${kid ? from.kidName : from.name}${kid ? ' の なかで' : ' の内部処理'}`
+            : `${kid ? from.kidName : from.name} → ${kid ? to.kidName : to.name}`}
         </span>
         {phase && (
           <span className="chip" style={{ background: phase.color }}>
@@ -58,6 +61,7 @@ export function StepDetail({ protocol, current, mode }: Props) {
         )}
         {step.encrypted && <span className="chip chip-lock">🔒 {ui.encrypted}</span>}
         {step.optional && <span className="chip chip-opt">※ {ui.optional}</span>}
+        {step.danger && <span className="chip chip-danger">⚠ {ui.danger}</span>}
       </div>
 
       {kid ? (
@@ -94,6 +98,7 @@ export function StepDetail({ protocol, current, mode }: Props) {
           ))}
         </p>
       )}
+      <KeyInventory protocol={protocol} current={current} mode={mode} />
     </article>
   );
 }
@@ -149,6 +154,7 @@ function Intro({ protocol, mode }: { protocol: Protocol; mode: Mode }) {
           <span>{ui.legendDash}</span>
         </div>
       </div>
+      <KeyInventory protocol={protocol} current={0} mode={mode} />
     </article>
   );
 }

@@ -1,0 +1,133 @@
+import type { Protocol } from './types';
+import { P } from './colors';
+import { cryptoActors } from './cryptoActors';
+
+export const symmetric: Protocol = {
+  id: 'symmetric',
+  name: '共通鍵暗号と鍵配送問題',
+  tagline: '同じ鍵で暗号化・復号する方式と、その鍵をどう渡すかという問題',
+  kidTagline: 'おなじ かぎで しめて あける。でも かぎを どう わたす？',
+  layer: '暗号の基本（TLS・IPsec のデータ暗号化の土台）',
+  rfcs: [
+    { rfc: 4949, title: 'Internet Security Glossary, Version 2' },
+    { rfc: 5116, title: 'An Interface and Algorithms for Authenticated Encryption' },
+  ],
+  kidIntro:
+    'アリスさんが ボブさんに ないしょの おてがみを おくりたい。はこに いれて かぎを かければ、とちゅうで のぞき見イブに みられても だいじょうぶ。ボブさんが おなじ かぎを もっていれば あけられるね。でも… その かぎは どうやって ボブさんに わたすの？',
+  intro:
+    '共通鍵暗号（対称鍵暗号）は、暗号化と復号に同じ鍵を使う方式で、AES などが代表例。高速なので実際のデータ暗号化はほぼすべて共通鍵暗号で行われる。ただし送信者と受信者が事前に同じ鍵を安全に共有している必要があり、盗聴されうる通信路しかない場合にどう鍵を渡すかが「鍵配送問題」になる。ここでは仕組みを見やすくするため、鍵 3 のシーザー暗号（文字を 3 つずらす）をおもちゃの例として使う。',
+  actors: cryptoActors,
+  phases: [
+    { id: 'encrypt', name: '暗号化して送信', kidName: 'かぎを かけて おくる', color: P.data },
+    { id: 'problem', name: '鍵配送問題', kidName: 'かぎを どう わたす？', color: P.switch },
+    { id: 'result', name: '結果', kidName: 'どうなった？', color: P.close },
+  ],
+  items: {
+    plain: { label: '平文 "HELLO"', kidLabel: 'おてがみ「HELLO」', kind: 'plain', color: '#feca57' },
+    key: { label: '共通鍵 K = 3', kidLabel: 'かぎ（3つ ずらす）', kind: 'shared', color: '#ff6b6b' },
+    cipher: { label: '暗号文 "KHOOR"', kidLabel: 'かぎつきの はこ「KHOOR」', kind: 'cipher', color: '#a55eea' },
+  },
+  initial: { a: ['plain'] },
+  steps: [
+    {
+      id: 'make-key',
+      from: 'a',
+      to: 'a',
+      message: '共通鍵 K を作る',
+      phase: 'encrypt',
+      look: { color: '#ff6b6b', accessory: 'key' },
+      summary: 'アリスが暗号化と復号の両方に使う鍵を用意する',
+      kidTitle: 'かぎを つくったよ',
+      kid: 'アリスさんが ひみつの かぎを つくったよ。この かぎで しめた はこは、おなじ かぎで しか あけられないんだ。',
+      detail:
+        '共通鍵暗号では暗号化と復号に同じ鍵 K を使う。実際の AES-128 なら 128 ビットの乱数を暗号論的に安全な乱数生成器で作る。ここでは鍵 K = 3（3 文字ずらす）とする。',
+      fields: [
+        { name: '方式', value: 'シーザー暗号（おもちゃの例）', note: '実際は AES-GCM など' },
+        { name: '鍵 K', value: '3' },
+      ],
+      gives: { a: ['key'] },
+    },
+    {
+      id: 'encrypt',
+      from: 'a',
+      to: 'a',
+      message: 'K で暗号化',
+      phase: 'encrypt',
+      look: { color: '#a55eea', accessory: 'gear' },
+      summary: '平文を鍵 K で暗号文に変換する',
+      kidTitle: 'はこに いれて かぎを かけた',
+      kid: '「HELLO」を はこに いれて かぎを かけると「KHOOR」に なったよ。これなら だれが みても いみが わからないね。',
+      detail:
+        '暗号化 E(K, 平文) = 暗号文。シーザー暗号では各文字を K 文字後ろにずらすので HELLO → KHOOR。実際の AEAD（AES-GCM など）では暗号化と同時に改ざん検知用の認証タグも付く。',
+      fields: [
+        { name: '平文', value: 'HELLO' },
+        { name: '暗号文', value: 'KHOOR', note: 'H→K, E→H, L→O, O→R' },
+      ],
+      rfc: [{ rfc: 5116, section: '2.1' }],
+      gives: { a: ['cipher'] },
+    },
+    {
+      id: 'send-cipher',
+      from: 'a',
+      to: 'b',
+      message: '暗号文 "KHOOR"',
+      phase: 'encrypt',
+      encrypted: true,
+      look: { color: '#a55eea', accessory: 'box' },
+      summary: '暗号文を送る。盗聴者にも届くが、鍵がなければ読めない',
+      kidTitle: 'かぎつきの はこを とどけるよ',
+      kid: 'かぎつきの はこを おくるよ。とちゅうで イブが のぞき見しても、かぎが ないから なかみは わからない。でも… ボブさんも まだ かぎを もっていないよ！',
+      detail:
+        'インターネットのような通信路では、途中の誰かがパケットをコピーできると考える。暗号文はイブにも届くが、鍵 K を知らなければ平文には戻せない。一方、ボブもまだ K を持っていないので復号できない。',
+      fields: [{ name: 'ペイロード', value: 'KHOOR' }],
+      gives: { b: ['cipher'], e: ['cipher'] },
+    },
+    {
+      id: 'send-key',
+      from: 'a',
+      to: 'b',
+      message: '鍵 K をそのまま送る',
+      phase: 'problem',
+      danger: true,
+      look: { color: '#ff6b6b', accessory: 'key' },
+      summary: '鍵を平文のまま送ってしまう（これが鍵配送問題）',
+      kidTitle: 'かぎを そのまま おくっちゃった！',
+      kid: 'ボブさんに かぎを わたさないと あけられない。だから かぎを そのまま おくったら… イブにも かぎを みられちゃった！',
+      detail:
+        '鍵を守るための暗号化にも鍵が要るため、最初の鍵だけは暗号化せずに送るしかない。盗聴可能な通信路で鍵を送ると、盗聴者も同じ鍵を手に入れてしまう。これが鍵配送問題。',
+      fields: [{ name: 'ペイロード', value: 'K = 3（平文）' }],
+      gives: { b: ['key'], e: ['key'] },
+    },
+    {
+      id: 'bob-decrypt',
+      from: 'b',
+      to: 'b',
+      message: 'K で復号',
+      phase: 'result',
+      look: { color: '#feca57', accessory: 'check' },
+      summary: 'ボブは鍵 K で暗号文を平文に戻せる',
+      kidTitle: 'あけられた！',
+      kid: 'ボブさんは かぎで はこを あけて「HELLO」を よめたよ。',
+      detail: '復号 D(K, 暗号文) = 平文。KHOOR を 3 文字前にずらして HELLO に戻す。',
+      fields: [{ name: '復号結果', value: 'HELLO' }],
+      gives: { b: ['plain'] },
+    },
+    {
+      id: 'eve-decrypt',
+      from: 'e',
+      to: 'e',
+      message: 'イブも復号できる',
+      phase: 'result',
+      danger: true,
+      look: { color: '#576574', accessory: 'gear' },
+      summary: '盗聴者も同じ鍵を持っているので内容が漏れる',
+      kidTitle: 'イブにも よまれちゃった…',
+      kid: 'イブも かぎを もっているから、はこを あけて よめちゃった！ かぎを あんぜんに わたす ほうほうが ひつようだね。それが つぎの「こうかいかぎ あんごう」と「ディフィー・ヘルマン」だよ。',
+      detail:
+        '鍵が漏れると暗号は意味をなさない。解決策は (1) 事前に別の安全な経路で鍵を共有する（IPsec の PSK など）、(2) 公開鍵暗号で共通鍵を暗号化して送る、(3) Diffie-Hellman 鍵交換で盗聴者に知られずに共通鍵を作る、のいずれか。TLS や IPsec は (2)(3) で鍵を共有し、データ自体は高速な共通鍵暗号で守る。',
+      fields: [{ name: '漏えいした内容', value: 'HELLO' }],
+      rfc: [{ rfc: 4949 }],
+      gives: { e: ['plain'] },
+    },
+  ],
+};

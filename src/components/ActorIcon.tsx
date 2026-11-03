@@ -43,6 +43,25 @@ export function ActorIconShape({ kind }: { kind: Kind }) {
           ))}
         </g>
       );
+    case 'eve':
+      return (
+        <g>
+          {/* 盗聴者イブ: 探偵帽と虫めがね。目は横を見ている */}
+          <circle cx="50" cy="56" r="30" fill="#f3e6ff" stroke={INK} strokeWidth="3" />
+          <path d="M18 34 H82" stroke={INK} strokeWidth="3.5" strokeLinecap="round" />
+          <path d="M28 34 Q30 10 50 10 Q70 10 72 34 Z" fill="#6c5ce7" stroke={INK} strokeWidth="3" strokeLinejoin="round" />
+          <rect x="29" y="26" width="42" height="6" fill="#ffd23f" />
+          <ellipse cx="40" cy="54" rx="6" ry="6.5" fill="#fff" stroke={INK} strokeWidth="2" />
+          <ellipse cx="60" cy="54" rx="6" ry="6.5" fill="#fff" stroke={INK} strokeWidth="2" />
+          <circle cx="43" cy="55" r="3.2" fill={INK} />
+          <circle cx="63" cy="55" r="3.2" fill={INK} />
+          <ellipse cx="33" cy="66" rx="4" ry="2.4" fill="#ff7aa2" opacity="0.7" />
+          <ellipse cx="67" cy="66" rx="4" ry="2.4" fill="#ff7aa2" opacity="0.7" />
+          <path d="M45 70 Q50 67 55 70" fill="none" stroke={INK} strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M80 74 L92 88" stroke={INK} strokeWidth="5" strokeLinecap="round" />
+          <circle cx="76" cy="69" r="9" fill="#d6f2ff" fillOpacity="0.85" stroke={INK} strokeWidth="3" />
+        </g>
+      );
     case 'router':
       return (
         <g>

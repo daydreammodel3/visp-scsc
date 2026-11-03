@@ -18,8 +18,28 @@ interface Layout {
   compact: boolean;
 }
 
-const WIDE: Layout = { VB_W: 680, GUTTER_L: 150, GUTTER_R: 70, HEADER: 150, ROW: 88, LINE_OFFSET: 62, BUDDY: 58, ACTOR_SCALE: 0.84, compact: false };
-const COMPACT: Layout = { VB_W: 400, GUTTER_L: 58, GUTTER_R: 46, HEADER: 124, ROW: 94, LINE_OFFSET: 68, BUDDY: 52, ACTOR_SCALE: 0.7, compact: true };
+const WIDE: Layout = {
+  VB_W: 680,
+  GUTTER_L: 150,
+  GUTTER_R: 70,
+  HEADER: 150,
+  ROW: 88,
+  LINE_OFFSET: 62,
+  BUDDY: 58,
+  ACTOR_SCALE: 0.84,
+  compact: false,
+};
+const COMPACT: Layout = {
+  VB_W: 400,
+  GUTTER_L: 58,
+  GUTTER_R: 46,
+  HEADER: 124,
+  ROW: 94,
+  LINE_OFFSET: 68,
+  BUDDY: 52,
+  ACTOR_SCALE: 0.7,
+  compact: true,
+};
 
 /** コンテナ幅を監視して、スマホでは縦長のレイアウトに切り替える */
 function useLayout(ref: RefObject<HTMLDivElement | null>): Layout {
@@ -27,7 +47,7 @@ function useLayout(ref: RefObject<HTMLDivElement | null>): Layout {
   useEffect(() => {
     const el = ref.current;
     if (!el || typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(([entry]) => setCompact(entry.contentRect.width < 560));
+    const ro = new ResizeObserver(([entry]) => setCompact(entry.contentRect.width < 480));
     ro.observe(el);
     return () => ro.disconnect();
   }, [ref]);
@@ -47,6 +67,59 @@ function ArrowHead({ x, y, dir, color }: { x: number; y: number; dir: number; co
   return <path d={`M${x} ${y} L${x - dir * 13} ${y - 7.5} L${x - dir * 13} ${y + 7.5} Z`} fill={color} strokeLinejoin="round" />;
 }
 
+/** 全角は 1em、半角は 0.6em としたおおよその文字幅 */
+function estimateWidth(text: string, fontSize: number): number {
+  let em = 0;
+  for (const ch of text) em += /[\u0000-\u00ff]/.test(ch) ? 0.6 : 1;
+  return em * fontSize;
+}
+
+/** ノードの中での処理（鍵の生成・計算など）。生命線から出て戻る小さなループ */
+function SelfStep(props: {
+  x: number;
+  y: number;
+  dir: number;
+  state: string;
+  color: string;
+  label: string;
+  grow: number;
+  vbWidth: number;
+}) {
+  const { x, y, dir, state, color, label, grow, vbWidth } = props;
+  const w = 30;
+  const textX = x + dir * (w + 10);
+  // 図の端からはみ出しそうなときは文字幅を詰める
+  const room = dir > 0 ? vbWidth - 8 - textX : textX - 8;
+  const fit = estimateWidth(label, 15) > room ? room : undefined;
+  const visible = state !== 'future';
+  return (
+    <g>
+      <path
+        d={`M${x} ${y - 16} H${x + dir * w} V${y + 6} H${x + dir * 9}`}
+        fill="none"
+        stroke={color}
+        strokeWidth={state === 'current' ? 4.5 : state === 'past' ? 3.5 : 2.5}
+        strokeDasharray={visible ? undefined : '3 8'}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity={visible ? Math.max(0.25, grow) : 1}
+      />
+      <ArrowHead x={x + 1 * dir} y={y + 6} dir={-dir} color={color} />
+      <circle cx={x} cy={y - 5} r="5" fill={visible ? color : '#fff'} stroke={color} strokeWidth="2" />
+      <text
+        x={textX}
+        y={y + 22}
+        textAnchor={dir > 0 ? 'start' : 'end'}
+        className="msg-label"
+        textLength={fit}
+        lengthAdjust={fit ? 'spacingAndGlyphs' : undefined}
+      >
+        {label}
+      </text>
+    </g>
+  );
+}
+
 export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }: Props) {
   const kid = mode === 'kid';
   const { actors, steps, phases } = protocol;
@@ -63,6 +136,9 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
     });
     return map;
   }, [actors, VB_W, GUTTER_L, GUTTER_R]);
+
+  /** ノード内の処理を描く向き: 一番右のノードだけ左へ、それ以外は右へ */
+  const selfLoopDir = (id: string) => (actors.length > 1 && actors[actors.length - 1].id === id ? -1 : 1);
 
   const rowY = (i: number) => HEADER + (i - 1) * ROW + LINE_OFFSET; // i は 1 始まり
   const height = HEADER + steps.length * ROW + 40;
@@ -94,12 +170,7 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
 
   return (
     <div className="diagram-scroll" ref={scrollRef}>
-      <svg
-        viewBox={`0 0 ${VB_W} ${height}`}
-        className="diagram"
-        role="group"
-        aria-label={`${protocol.name} のシーケンス図`}
-      >
+      <svg viewBox={`0 0 ${VB_W} ${height}`} className="diagram" role="group" aria-label={`${protocol.name} のシーケンス図`}>
         {/* フェーズ帯 */}
         {bands.map((b) => {
           const phase = phases.find((p) => p.id === b.phaseId);
@@ -136,12 +207,25 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
           const caption = kid ? main : sub;
           return (
             <g key={a.id}>
-              <line x1={x} y1={HEADER - 14} x2={x} y2={height - 20} stroke="#b9b3c7" strokeWidth="3" strokeDasharray="2 9" strokeLinecap="round" />
+              <line
+                x1={x}
+                y1={HEADER - 14}
+                x2={x}
+                y2={height - 20}
+                stroke="#b9b3c7"
+                strokeWidth="3"
+                strokeDasharray="2 9"
+                strokeLinecap="round"
+              />
               <g transform={`translate(${x - 50 * L.ACTOR_SCALE} 6) scale(${L.ACTOR_SCALE})`}>
                 <ActorIconShape kind={a.icon} />
               </g>
-              <text x={x} y={100 * L.ACTOR_SCALE + 26} textAnchor="middle" className="actor-kid">{title}</text>
-              <text x={x} y={100 * L.ACTOR_SCALE + 44} textAnchor="middle" className="actor-tech">{caption}</text>
+              <text x={x} y={100 * L.ACTOR_SCALE + 26} textAnchor="middle" className="actor-kid">
+                {title}
+              </text>
+              <text x={x} y={100 * L.ACTOR_SCALE + 44} textAnchor="middle" className="actor-tech">
+                {caption}
+              </text>
             </g>
           );
         })}
@@ -159,7 +243,17 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
           const stroke = state === 'future' ? '#cfc9da' : s.encrypted ? '#3aa8d8' : (phase?.color ?? '#888');
           const xEnd = isCurrent ? x1 + (x2 - x1) * t : x2;
           const dir = Math.sign(x2 - x1) || 1;
-          const label = `${s.encrypted ? '🔒 ' : ''}${s.message}${s.optional ? ' ※' : ''}`;
+          const label = `${s.danger ? '⚠ ' : ''}${s.encrypted ? '🔒 ' : ''}${s.message}${s.optional ? ' ※' : ''}`;
+          const local = s.from === s.to;
+          const loopDir = selfLoopDir(s.from);
+          // 送信者・受信者以外で、このメッセージをコピーしたノード（盗聴など）
+          const taps = local
+            ? []
+            : Object.entries(s.gives ?? {})
+                .filter(([id, items]) => id !== s.from && id !== s.to && items.length > 0)
+                .map(([id]) => actorX.get(id))
+                .filter((x): x is number => x !== undefined && (x - x1) * (x - x2) < 0);
+          const tapVisible = (x: number) => isPast || (isCurrent && (xEnd - x) * dir >= 0);
           return (
             <g
               key={s.id}
@@ -176,29 +270,63 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
                 }
               }}
             >
-              <rect x={GUTTER_L - 36} y={y - LINE_OFFSET + 6} width={VB_W - GUTTER_L - GUTTER_R + 72} height={ROW - 10} rx="14" className="msg-hit" />
-              <circle cx={Math.min(x1, x2) - 22} cy={y} r="11" className="msg-num" />
-              <text x={Math.min(x1, x2) - 22} y={y + 4.5} textAnchor="middle" className="msg-num-text">{i}</text>
-              {(isPast || isCurrent) && Math.abs(xEnd - x1) > 4 && (
-                <line
-                  x1={x1}
-                  y1={y}
-                  x2={isCurrent && tRaw < 1 ? xEnd : xEnd - dir * 8}
-                  y2={y}
-                  stroke={stroke}
-                  strokeWidth={isCurrent ? 5 : 3.5}
-                  strokeLinecap="round"
-                  strokeDasharray={s.optional ? '10 7' : undefined}
-                />
-              )}
-              {(isPast || (isCurrent && tRaw >= 1)) && <ArrowHead x={x2} y={y} dir={dir} color={stroke} />}
-              {state === 'future' && (
-                <line x1={x1} y1={y} x2={x2 - dir * 8} y2={y} stroke={stroke} strokeWidth="2.5" strokeDasharray="3 8" strokeLinecap="round" />
-              )}
-              {state === 'future' && <ArrowHead x={x2} y={y} dir={dir} color={stroke} />}
-              <text x={(x1 + x2) / 2} y={y + 22} textAnchor="middle" className="msg-label">
-                {label}
+              <rect
+                x={GUTTER_L - 36}
+                y={y - LINE_OFFSET + 6}
+                width={VB_W - GUTTER_L - GUTTER_R + 72}
+                height={ROW - 10}
+                rx="14"
+                className="msg-hit"
+              />
+              <circle cx={GUTTER_L - 22} cy={y} r="11" className="msg-num" />
+              <text x={GUTTER_L - 22} y={y + 4.5} textAnchor="middle" className="msg-num-text">
+                {i}
               </text>
+              {local ? (
+                <SelfStep x={x1} y={y} dir={loopDir} state={state} color={stroke} label={label} grow={isCurrent ? t : 1} vbWidth={VB_W} />
+              ) : (
+                <>
+                  {(isPast || isCurrent) && Math.abs(xEnd - x1) > 4 && (
+                    <line
+                      x1={x1}
+                      y1={y}
+                      x2={isCurrent && tRaw < 1 ? xEnd : xEnd - dir * 8}
+                      y2={y}
+                      stroke={stroke}
+                      strokeWidth={isCurrent ? 5 : 3.5}
+                      strokeLinecap="round"
+                      strokeDasharray={s.optional ? '10 7' : undefined}
+                    />
+                  )}
+                  {(isPast || (isCurrent && tRaw >= 1)) && <ArrowHead x={x2} y={y} dir={dir} color={stroke} />}
+                  {state === 'future' && (
+                    <line
+                      x1={x1}
+                      y1={y}
+                      x2={x2 - dir * 8}
+                      y2={y}
+                      stroke={stroke}
+                      strokeWidth="2.5"
+                      strokeDasharray="3 8"
+                      strokeLinecap="round"
+                    />
+                  )}
+                  {state === 'future' && <ArrowHead x={x2} y={y} dir={dir} color={stroke} />}
+                  {taps.map((tx) =>
+                    tapVisible(tx) ? (
+                      <g key={tx} className="tap">
+                        <circle cx={tx} cy={y} r="8" />
+                        <text x={tx} y={y - 12} textAnchor="middle">
+                          コピー
+                        </text>
+                      </g>
+                    ) : null,
+                  )}
+                  <text x={(x1 + x2) / 2} y={y + 22} textAnchor="middle" className="msg-label">
+                    {label}
+                  </text>
+                </>
+              )}
             </g>
           );
         })}
@@ -209,11 +337,12 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
             const s = steps[current - 1];
             const x1 = actorX.get(s.from)!;
             const x2 = actorX.get(s.to)!;
-            const dir = Math.sign(x2 - x1) || 1;
-            const x = x1 + dir * BUDDY * 0.2 + (x2 - x1 - dir * BUDDY * 0.75) * t;
-            const y = rowY(current);
-            const flip = x2 < x1;
-            const hop = tRaw < 1 ? Math.abs(Math.sin(tRaw * Math.PI * 6)) * 6 : 0;
+            const local = s.from === s.to;
+            const dir = local ? selfLoopDir(s.from) : Math.sign(x2 - x1) || 1;
+            const x = local ? x1 + dir * (BUDDY * 0.5 + 44) : x1 + dir * BUDDY * 0.2 + (x2 - x1 - dir * BUDDY * 0.75) * t;
+            const y = local ? rowY(current) - 12 : rowY(current);
+            const flip = local ? dir > 0 : x2 < x1;
+            const hop = tRaw < 1 ? (local ? (1 - t) * 26 : Math.abs(Math.sin(tRaw * Math.PI * 6)) * 6) : 0;
             const scale = BUDDY / 100;
             return (
               <g transform={`translate(${x - BUDDY / 2} ${y - BUDDY - 2 - hop})`} pointerEvents="none">
