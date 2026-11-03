@@ -4,7 +4,8 @@ import { C, P } from './colors';
 export const tls12: Protocol = {
   id: 'tls12',
   name: 'TLS 1.2',
-  tagline: 'Webの「かぎつき通信」のちょっと前の世代',
+  tagline: '2-RTT のフルハンドシェイク（RFC 5246）',
+  kidTagline: 'Webの「かぎつき通信」のちょっと前の世代',
   layer: 'TCP の上（HTTPS など）',
   rfcs: [
     { rfc: 5246, title: 'The Transport Layer Security (TLS) Protocol Version 1.2' },
@@ -33,6 +34,7 @@ export const tls12: Protocol = {
       message: 'ClientHello',
       phase: 'hello',
       look: { color: C.hello, accessory: 'wave' },
+      summary: '対応バージョン・暗号スイート・乱数を提示して接続を開始',
       kidTitle: 'こんにちは！',
       kid: 'パソコンさんから「こんにちは！ ぼくは こんな かぎの かけかたが つかえるよ」と おてがみを とどけるよ。',
       detail:
@@ -54,6 +56,7 @@ export const tls12: Protocol = {
       message: 'ServerHello',
       phase: 'hello',
       look: { color: C.hello2, accessory: 'wave' },
+      summary: '使用する暗号スイートを決定し、サーバー乱数を返す',
       kidTitle: 'こんにちは！ これにしよう',
       kid: 'サーバーさんが「こんにちは！ その中から この かぎの かけかたに しよう」と こたえるよ。',
       detail:
@@ -74,6 +77,7 @@ export const tls12: Protocol = {
       message: 'Certificate',
       phase: 'key',
       look: { color: C.cert, accessory: 'scroll' },
+      summary: 'サーバー証明書チェーンを提示',
       kidTitle: 'ほんものの しょうこだよ',
       kid: 'サーバーさんが「ぼくは にせものじゃないよ」という しょうめいしょ（みぶんしょう）を みせるよ。しんようできる だれかの ハンコが おしてあるんだ。',
       detail:
@@ -90,6 +94,7 @@ export const tls12: Protocol = {
       message: 'ServerKeyExchange',
       phase: 'key',
       look: { color: C.key, accessory: 'key' },
+      summary: 'ECDHE 公開値を署名付きで送る',
       kidTitle: 'かぎの はんぶんを どうぞ',
       kid: 'サーバーさんが「かぎの はんぶんの ざいりょう」を わたすよ。だれかに みられても だいじょうぶな ふしぎな ざいりょうなんだ。',
       detail:
@@ -112,6 +117,7 @@ export const tls12: Protocol = {
       message: 'ServerHelloDone',
       phase: 'key',
       look: { color: C.hello2, accessory: 'check' },
+      summary: 'サーバー側の Hello フェーズ終了を通知',
       kidTitle: 'ぼくの ばんは おしまい',
       kid: 'サーバーさんが「ぼくから わたすものは ぜんぶ わたしたよ。つぎは きみの ばんだよ」と つたえるよ。',
       detail:
@@ -126,6 +132,7 @@ export const tls12: Protocol = {
       message: 'ClientKeyExchange',
       phase: 'key',
       look: { color: C.key, accessory: 'key' },
+      summary: 'クライアントの ECDHE 公開値を送り、双方で master secret を導出',
       kidTitle: 'のこりの はんぶんを どうぞ',
       kid: 'パソコンさんも「かぎの のこり はんぶんの ざいりょう」を わたすよ。これで ふたりとも 同じ かぎを つくれるんだ。でも まわりの人には つくれないよ！',
       detail:
@@ -144,6 +151,7 @@ export const tls12: Protocol = {
       message: 'ChangeCipherSpec',
       phase: 'switch',
       look: { color: C.setup, accessory: 'gear' },
+      summary: 'クライアント→サーバー方向の暗号化を開始',
       kidTitle: 'ここから ひみつモード！',
       kid: 'パソコンさんが「ここからは かぎを かけて おくるね！」と あいずするよ。',
       detail:
@@ -159,6 +167,7 @@ export const tls12: Protocol = {
       phase: 'switch',
       encrypted: true,
       look: { color: C.finish, accessory: 'flag' },
+      summary: 'ハンドシェイク全体の検証値を暗号化して送信',
       kidTitle: 'ここまで まちがいない？',
       kid: 'かぎを かけた はじめての おてがみ。「ここまでの おはなし、ぜんぶ あってるよね？」と まとめを おくるよ。とちゅうで だれかが いたずらしていたら ここで わかるんだ。',
       detail:
@@ -173,6 +182,7 @@ export const tls12: Protocol = {
       message: 'ChangeCipherSpec',
       phase: 'switch',
       look: { color: C.setup, accessory: 'gear' },
+      summary: 'サーバー→クライアント方向の暗号化を開始',
       kidTitle: 'ぼくも ひみつモード！',
       kid: 'サーバーさんも「ぼくも ここから かぎを かけるね！」と あいずするよ。',
       detail: 'サーバーも以降の送信レコードを新しい暗号パラメータで保護することを通知する。',
@@ -187,6 +197,7 @@ export const tls12: Protocol = {
       phase: 'switch',
       encrypted: true,
       look: { color: C.finish, accessory: 'flag' },
+      summary: 'サーバー側の検証値を送り、ハンドシェイク完了（2-RTT）',
       kidTitle: 'うん、ばっちり！',
       kid: 'サーバーさんも まとめを おくって「ぜんぶ あってるよ！ じゅんび かんりょう！」。これで あくしゅ（ハンドシェイク）は おしまい。',
       detail:
@@ -202,6 +213,7 @@ export const tls12: Protocol = {
       phase: 'data',
       encrypted: true,
       look: { color: C.data, accessory: 'box' },
+      summary: 'HTTP リクエストを暗号化して送信',
       kidTitle: 'ページを ください',
       kid: 'かぎの かかった にもつで「この ページを みせて！」と おねがいするよ。とちゅうで だれかが ひろっても、なかみは よめないんだ。',
       detail:
@@ -220,6 +232,7 @@ export const tls12: Protocol = {
       phase: 'data',
       encrypted: true,
       look: { color: C.data, accessory: 'box' },
+      summary: 'HTTP レスポンスを暗号化して返信',
       kidTitle: 'はい、どうぞ',
       kid: 'サーバーさんも かぎを かけた にもつで ページを とどけるよ。',
       detail: 'HTTP レスポンスなどが同様に暗号化されて返る。',
@@ -237,6 +250,7 @@ export const tls12: Protocol = {
       phase: 'close',
       encrypted: true,
       look: { color: C.bye, accessory: 'moon' },
+      summary: '接続の正常終了を通知',
       kidTitle: 'またね！',
       kid: '「おはなし おしまい。またね！」と つたえて、おわりに するよ。',
       detail:

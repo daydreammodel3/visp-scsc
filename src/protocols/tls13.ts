@@ -4,7 +4,8 @@ import { C, P } from './colors';
 export const tls13: Protocol = {
   id: 'tls13',
   name: 'TLS 1.3',
-  tagline: 'いまの Web の「かぎつき通信」。はやくて あんぜん',
+  tagline: '1-RTT で暗号化を始める現行版（RFC 8446）',
+  kidTagline: 'いまの Web の「かぎつき通信」。はやくて あんぜん',
   layer: 'TCP の上（HTTPS など）',
   rfcs: [{ rfc: 8446, title: 'The Transport Layer Security (TLS) Protocol Version 1.3' }],
   kidIntro:
@@ -30,6 +31,7 @@ export const tls13: Protocol = {
       message: 'ClientHello',
       phase: 'kx',
       look: { color: C.hello, accessory: 'key' },
+      summary: '鍵共有の公開値も同時に送って接続を開始',
       kidTitle: 'こんにちは！ かぎの ざいりょうも どうぞ',
       kid: 'パソコンさんは「こんにちは！」と いっしょに、さいしょから かぎの はんぶんの ざいりょうを もっていくよ。だから TLS 1.2 より はやいんだ。',
       detail:
@@ -56,6 +58,7 @@ export const tls13: Protocol = {
       message: 'ServerHello',
       phase: 'kx',
       look: { color: C.hello2, accessory: 'key' },
+      summary: '暗号スイートを決定し公開値を返す（以降は暗号化）',
       kidTitle: 'こんにちは！ ぼくの ざいりょうも どうぞ',
       kid: 'サーバーさんも あいさつと いっしょに、のこり はんぶんの ざいりょうを わたすよ。これで もう ふたりだけの かぎが できた！',
       detail:
@@ -80,6 +83,7 @@ export const tls13: Protocol = {
       phase: 'params',
       encrypted: true,
       look: { color: C.setup, accessory: 'gear' },
+      summary: '鍵交換以外の拡張への応答を暗号化して送信',
       kidTitle: 'ここからは ないしょで せってい',
       kid: 'もう かぎが あるから、ここからの おてがみは ぜんぶ かぎつき！ サーバーさんが「こんな せっていで いくね」と ないしょで つたえるよ。',
       detail:
@@ -95,6 +99,7 @@ export const tls13: Protocol = {
       phase: 'auth',
       encrypted: true,
       look: { color: C.cert, accessory: 'scroll' },
+      summary: '証明書チェーンを暗号化して提示',
       kidTitle: 'ほんものの しょうこだよ',
       kid: 'サーバーさんの みぶんしょう（しょうめいしょ）。TLS 1.3 では これも かぎつきで おくるから、まわりの人には だれと はなしているか わかりにくいんだ。',
       detail:
@@ -113,6 +118,7 @@ export const tls13: Protocol = {
       phase: 'auth',
       encrypted: true,
       look: { color: C.sign, accessory: 'pen' },
+      summary: '証明書の秘密鍵を持っていることを署名で証明',
       kidTitle: 'サインで しょうめい！',
       kid: 'みぶんしょうを ひろっただけの にせものかも？ そこで サーバーさんは ほんにんにしか かけない サインを して みせるよ。',
       detail:
@@ -131,6 +137,7 @@ export const tls13: Protocol = {
       phase: 'auth',
       encrypted: true,
       look: { color: C.finish, accessory: 'flag' },
+      summary: 'トランスクリプトの HMAC でハンドシェイクを確認',
       kidTitle: 'ぼくの じゅんびは OK！',
       kid: 'サーバーさんが「ここまでの おはなし、ぜんぶ あってるよね？」と まとめを おくるよ。',
       detail:
@@ -146,6 +153,7 @@ export const tls13: Protocol = {
       phase: 'auth',
       encrypted: true,
       look: { color: C.finish, accessory: 'flag' },
+      summary: 'クライアントも確認を返し、1-RTT でハンドシェイク完了',
       kidTitle: 'ぼくも OK！',
       kid: 'パソコンさんも まとめを おくって「ばっちり！」。たった 1 おうふくで あくしゅが おわったよ。',
       detail:
@@ -162,6 +170,7 @@ export const tls13: Protocol = {
       encrypted: true,
       optional: true,
       look: { color: C.ticket, accessory: 'ticket' },
+      summary: '次回のセッション再開用チケットを発行',
       kidTitle: 'つぎは これで すぐ はいれるよ',
       kid: 'サーバーさんが「つぎに きたときは この チケットを みせてね。すぐ はいれるよ」と チケットを くれるよ。',
       detail:
@@ -182,6 +191,7 @@ export const tls13: Protocol = {
       phase: 'data',
       encrypted: true,
       look: { color: C.data, accessory: 'box' },
+      summary: 'リクエストをアプリケーション鍵で暗号化して送信',
       kidTitle: 'ページを ください',
       kid: 'かぎつきの にもつで「この ページを みせて！」と おねがいするよ。',
       detail:
@@ -200,6 +210,7 @@ export const tls13: Protocol = {
       phase: 'data',
       encrypted: true,
       look: { color: C.data, accessory: 'box' },
+      summary: 'レスポンスを暗号化して返信',
       kidTitle: 'はい、どうぞ',
       kid: 'サーバーさんも かぎつきの にもつで ページを とどけるよ。',
       detail: 'レスポンスも同様に暗号化されて返る。',
@@ -217,6 +228,7 @@ export const tls13: Protocol = {
       phase: 'close',
       encrypted: true,
       look: { color: C.bye, accessory: 'moon' },
+      summary: '送信の終了を通知',
       kidTitle: 'またね！',
       kid: '「おはなし おしまい。またね！」と つたえて おわりに するよ。',
       detail:

@@ -1,4 +1,7 @@
+import { UI, type Mode } from '../lib/text';
+
 interface Props {
+  mode: Mode;
   current: number;
   total: number;
   playing: boolean;
@@ -9,10 +12,10 @@ interface Props {
 }
 
 export type Speed = 'slow' | 'normal' | 'fast';
-export const SPEEDS: Record<Speed, { label: string; travel: number; interval: number }> = {
-  slow: { label: 'ゆっくり', travel: 1800, interval: 4200 },
-  normal: { label: 'ふつう', travel: 1200, interval: 2800 },
-  fast: { label: 'はやい', travel: 650, interval: 1500 },
+export const SPEEDS: Record<Speed, { travel: number; interval: number }> = {
+  slow: { travel: 1800, interval: 4200 },
+  normal: { travel: 1200, interval: 2800 },
+  fast: { travel: 650, interval: 1500 },
 };
 
 function Icon({ d }: { d: string }) {
@@ -32,36 +35,38 @@ const ICONS = {
   pause: 'M6.5 5h4v14h-4zM13.5 5h4v14h-4z',
 };
 
-export function StepControls({ current, total, playing, speed, onChange, onTogglePlay, onSpeed }: Props) {
+export function StepControls({ mode, current, total, playing, speed, onChange, onTogglePlay, onSpeed }: Props) {
+  const ui = UI[mode];
   const atStart = current <= 0;
   const atEnd = current >= total;
+  const playLabel = playing ? ui.pause : atEnd ? ui.replay : ui.play;
   return (
-    <div className="controls" role="toolbar" aria-label="ステップそうさ">
+    <div className="controls" role="toolbar" aria-label={ui.toolbar}>
       <div className="control-buttons">
-        <button type="button" className="ctl" onClick={() => onChange(0)} disabled={atStart} aria-label="さいしょへ（Home）">
+        <button type="button" className="ctl" onClick={() => onChange(0)} disabled={atStart} aria-label={`${ui.first}（Home）`}>
           <Icon d={ICONS.first} />
-          <span>さいしょ</span>
+          <span>{ui.first}</span>
         </button>
-        <button type="button" className="ctl" onClick={() => onChange(current - 1)} disabled={atStart} aria-label="1つもどる（←）">
+        <button type="button" className="ctl" onClick={() => onChange(current - 1)} disabled={atStart} aria-label={`${ui.prev}（←）`}>
           <Icon d={ICONS.prev} />
-          <span>もどる</span>
+          <span>{ui.prev}</span>
         </button>
-        <button type="button" className="ctl ctl-play" onClick={onTogglePlay} aria-label={playing ? 'とめる（スペース）' : 'じどうで すすむ（スペース）'}>
+        <button type="button" className="ctl ctl-play" onClick={onTogglePlay} aria-label={`${playLabel}（Space）`}>
           <Icon d={playing ? ICONS.pause : ICONS.play} />
-          <span>{playing ? 'とめる' : atEnd ? 'もういちど' : 'じどう'}</span>
+          <span>{playLabel}</span>
         </button>
-        <button type="button" className="ctl ctl-next" onClick={() => onChange(current + 1)} disabled={atEnd} aria-label="1つすすむ（→）">
+        <button type="button" className="ctl ctl-next" onClick={() => onChange(current + 1)} disabled={atEnd} aria-label={`${ui.next}（→）`}>
           <Icon d={ICONS.next} />
-          <span>すすむ</span>
+          <span>{ui.next}</span>
         </button>
-        <button type="button" className="ctl" onClick={() => onChange(total)} disabled={atEnd} aria-label="さいごへ（End）">
+        <button type="button" className="ctl" onClick={() => onChange(total)} disabled={atEnd} aria-label={`${ui.last}（End）`}>
           <Icon d={ICONS.last} />
-          <span>さいご</span>
+          <span>{ui.last}</span>
         </button>
       </div>
       <div className="control-track">
         <span className="step-count" aria-live="polite">
-          <b>{current}</b> / {total} て
+          <b>{current}</b> / {total} {ui.stepUnit}
         </span>
         <input
           type="range"
@@ -69,10 +74,10 @@ export function StepControls({ current, total, playing, speed, onChange, onToggl
           max={total}
           value={current}
           onChange={(e) => onChange(Number(e.target.value))}
-          aria-label="ステップの いち"
+          aria-label={ui.slider}
           style={{ ['--pct' as string]: `${total ? (current / total) * 100 : 0}%` }}
         />
-        <div className="speed" role="radiogroup" aria-label="はやさ">
+        <div className="speed" role="radiogroup" aria-label={ui.speedGroup}>
           {(Object.keys(SPEEDS) as Speed[]).map((k) => (
             <button
               key={k}
@@ -82,7 +87,7 @@ export function StepControls({ current, total, playing, speed, onChange, onToggl
               className={speed === k ? 'on' : ''}
               onClick={() => onSpeed(k)}
             >
-              {SPEEDS[k].label}
+              {ui.speeds[k]}
             </button>
           ))}
         </div>

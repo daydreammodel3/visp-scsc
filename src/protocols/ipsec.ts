@@ -4,7 +4,8 @@ import { C, P } from './colors';
 export const ipsec: Protocol = {
   id: 'ipsec',
   name: 'IPsec (IKEv2 + ESP)',
-  tagline: 'ネットワークどうしを つなぐ ひみつのトンネル',
+  tagline: 'IKEv2 の鍵交換と ESP トンネル',
+  kidTagline: 'ネットワークどうしを つなぐ ひみつのトンネル',
   layer: 'IP 層（IKE は UDP 500/4500、ESP は IP プロトコル 50）',
   rfcs: [
     { rfc: 4301, title: 'Security Architecture for the Internet Protocol' },
@@ -34,6 +35,7 @@ export const ipsec: Protocol = {
       message: 'IKE_SA_INIT 要求',
       phase: 'init',
       look: { color: C.hello, accessory: 'key' },
+      summary: '暗号方式の提案と DH 公開値・ノンスを送る',
       kidTitle: 'トンネル つくろう！',
       kid: 'ルーターAさんが「いっしょに ひみつの トンネルを つくろう！ かぎの ざいりょうも もってきたよ」と よびかけるよ。',
       detail:
@@ -57,6 +59,7 @@ export const ipsec: Protocol = {
       message: 'IKE_SA_INIT 応答',
       phase: 'init',
       look: { color: C.hello2, accessory: 'key' },
+      summary: '提案を選択して DH 公開値を返す（IKE SA の鍵が確定）',
       kidTitle: 'いいよ！ ぼくの ざいりょうも',
       kid: 'ルーターBさんが「いいよ！ この やりかたで いこう」と こたえて、かぎの ざいりょうを わたすよ。これで ふたりだけの かぎが できた！',
       detail:
@@ -81,6 +84,7 @@ export const ipsec: Protocol = {
       phase: 'auth',
       encrypted: true,
       look: { color: C.cert, accessory: 'scroll' },
+      summary: '暗号化された経路で身元を証明し、Child SA を提案',
       kidTitle: 'ぼくは ほんものの Aだよ',
       kid: 'ここからは かぎつき！ ルーターAさんが みぶんしょうと サインを みせて「ほんものの Aだよ。トンネルには この にもつを とおしてね」と つたえるよ。',
       detail:
@@ -106,6 +110,7 @@ export const ipsec: Protocol = {
       phase: 'auth',
       encrypted: true,
       look: { color: C.sign, accessory: 'pen' },
+      summary: '相互認証が完了し、ESP 用の Child SA が確立',
       kidTitle: 'ぼくも ほんものの Bだよ',
       kid: 'ルーターBさんも みぶんしょうと サインを みせて「トンネル かんせい！」。',
       detail:
@@ -130,6 +135,7 @@ export const ipsec: Protocol = {
       phase: 'data',
       encrypted: true,
       look: { color: C.data, accessory: 'box' },
+      summary: '元の IP パケットを暗号化してトンネル転送',
       kidTitle: 'トンネルで おとどけ',
       kid: 'たてものAの なかの パソコンが おくった おてがみを、まるごと かぎつきの はこに いれて トンネルで はこぶよ。',
       detail:
@@ -154,6 +160,7 @@ export const ipsec: Protocol = {
       phase: 'data',
       encrypted: true,
       look: { color: C.data, accessory: 'box' },
+      summary: '逆方向は別の SA で保護して転送',
       kidTitle: 'おへんじも トンネルで',
       kid: 'おへんじも かぎつきの はこに いれて、トンネルを とおって かえってくるよ。',
       detail: '逆方向は別の SA（別の SPI と鍵）で保護される。ESP SA は一方向ごとに存在する。',
@@ -173,6 +180,7 @@ export const ipsec: Protocol = {
       encrypted: true,
       optional: true,
       look: { color: C.key, accessory: 'gear' },
+      summary: '寿命が近い Child SA の鍵更新を要求',
       kidTitle: 'かぎを あたらしくしよう',
       kid: 'おなじ かぎを ずっと つかうと あぶないから、ときどき あたらしい かぎに とりかえるよ。',
       detail:
@@ -192,6 +200,7 @@ export const ipsec: Protocol = {
       encrypted: true,
       optional: true,
       look: { color: C.key, accessory: 'check' },
+      summary: '新しい Child SA が確立',
       kidTitle: 'あたらしい かぎ、OK！',
       kid: '「いいよ！」と こたえて、あたらしい かぎが できたよ。ふるい かぎは もう つかわないよ。',
       detail: '新しい Child SA が確立し、古い SA は INFORMATIONAL の Delete で削除される。',
@@ -206,6 +215,7 @@ export const ipsec: Protocol = {
       phase: 'close',
       encrypted: true,
       look: { color: C.bye, accessory: 'moon' },
+      summary: 'IKE SA と配下の Child SA の削除を通知',
       kidTitle: 'トンネル しまうね',
       kid: '「もう つかわないから トンネルを しまうね」と つたえるよ。',
       detail:
@@ -224,6 +234,7 @@ export const ipsec: Protocol = {
       phase: 'close',
       encrypted: true,
       look: { color: C.bye, accessory: 'check' },
+      summary: '削除を確認し、トンネルを終了',
       kidTitle: 'わかった、またね！',
       kid: '「わかった！ またね」。トンネルは なくなったよ。',
       detail: '空の INFORMATIONAL 応答で削除を確認し、双方が SA の状態を破棄する。',

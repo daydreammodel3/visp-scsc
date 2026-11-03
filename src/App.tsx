@@ -2,17 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { protocols, findProtocol } from './protocols';
 import { SequenceDiagram } from './components/SequenceDiagram';
 import { StepControls, SPEEDS, type Speed } from './components/StepControls';
-import { StepDetail, type Mode } from './components/StepDetail';
+import { StepDetail } from './components/StepDetail';
 import { PacketBuddy } from './components/PacketBuddy';
 import { parseHash, toHash } from './lib/route';
-
-function loadMode(): Mode {
-  try {
-    return localStorage.getItem('mode') === 'pro' ? 'pro' : 'kid';
-  } catch {
-    return 'kid';
-  }
-}
+import { UI, loadMode, saveMode, type Mode } from './lib/text';
 
 export default function App() {
   const [route, setRoute] = useState(() => parseHash(window.location.hash));
@@ -35,13 +28,8 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('mode', mode);
-    } catch {
-      /* ストレージが使えない環境では保存しない */
-    }
-  }, [mode]);
+  useEffect(() => saveMode(mode), [mode]);
+  const ui = UI[mode];
 
   const goTo = useCallback(
     (n: number) => setRoute((r) => ({ ...r, step: Math.min(Math.max(n, 0), total) })),
@@ -107,20 +95,20 @@ export default function App() {
           <PacketBuddy size={52} color="#ff9f43" accessory="wave" />
           <div>
             <h1>ハンドシェイクずかん</h1>
-            <p>パケットたちの「あいさつ」を 1手ずつ 見てみよう</p>
+            <p>{ui.subtitle}</p>
           </div>
         </div>
-        <div className="mode" role="radiogroup" aria-label="せつめいの むずかしさ">
-          <button type="button" role="radio" aria-checked={mode === 'kid'} className={mode === 'kid' ? 'on' : ''} onClick={() => setMode('kid')}>
-            やさしい
+        <div className="mode" role="radiogroup" aria-label={ui.modeGroup}>
+          <button type="button" role="radio" aria-checked={mode === 'adult'} className={mode === 'adult' ? 'on' : ''} onClick={() => setMode('adult')}>
+            大人向け
           </button>
-          <button type="button" role="radio" aria-checked={mode === 'pro'} className={mode === 'pro' ? 'on' : ''} onClick={() => setMode('pro')}>
-            くわしい
+          <button type="button" role="radio" aria-checked={mode === 'kid'} className={mode === 'kid' ? 'on' : ''} onClick={() => setMode('kid')}>
+            こども向け
           </button>
         </div>
       </header>
 
-      <nav className="protocols" aria-label="プロトコルを えらぶ">
+      <nav className="protocols" aria-label={ui.pickProtocol}>
         {protocols.map((p) => (
           <button
             key={p.id}
@@ -130,15 +118,16 @@ export default function App() {
             onClick={() => selectProtocol(p.id)}
           >
             <span className="proto-name">{p.name}</span>
-            <span className="proto-tag">{p.tagline}</span>
+            <span className="proto-tag">{mode === 'kid' ? p.kidTagline : p.tagline}</span>
           </button>
         ))}
       </nav>
 
       <main className="stage">
-        <section className="panel panel-diagram" aria-label="つうしんの ながれ">
+        <section className="panel panel-diagram" aria-label={ui.diagram}>
           <SequenceDiagram
             protocol={protocol}
+            mode={mode}
             current={current}
             travelMs={SPEEDS[speed].travel}
             onSelect={(i) => {
@@ -163,6 +152,7 @@ export default function App() {
           total={total}
           playing={playing}
           speed={speed}
+          mode={mode}
           onChange={(n) => {
             setPlaying(false);
             goTo(n);

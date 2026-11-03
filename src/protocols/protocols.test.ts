@@ -11,6 +11,10 @@ describe('プロトコル定義', () => {
 
   for (const p of protocols) {
     describe(p.name, () => {
+      it('大人向け・こども向けの紹介文がある', () => {
+        for (const v of [p.tagline, p.kidTagline, p.intro, p.kidIntro]) expect(v.trim()).not.toBe('');
+      });
+
       it('ステップが 1 つ以上ある', () => {
         expect(p.steps.length).toBeGreaterThan(0);
       });
@@ -41,6 +45,7 @@ describe('プロトコル定義', () => {
           expect(s.kid.trim(), `${s.id}.kid`).not.toBe('');
           expect(s.detail.trim(), `${s.id}.detail`).not.toBe('');
           expect(s.kidTitle.trim(), `${s.id}.kidTitle`).not.toBe('');
+          expect(s.summary.trim(), `${s.id}.summary`).not.toBe('');
         }
       });
 

@@ -64,11 +64,13 @@ export interface Step {
   encrypted?: boolean;
   /** 省略されることがあるメッセージ */
   optional?: boolean;
+  /** 大人向け: ひとことで言うと何をするメッセージか */
+  summary: string;
   /** こども向け: ひとことタイトル */
   kidTitle: string;
   /** こども向け: やさしい説明 */
   kid: string;
-  /** くわしい説明 */
+  /** 大人向けの説明 */
   detail: string;
   /** 主なフィールド */
   fields?: Field[];
@@ -78,8 +80,10 @@ export interface Step {
 export interface Protocol {
   id: string;
   name: string;
-  /** 一覧に出す短いサブタイトル */
+  /** 一覧に出す短いサブタイトル（大人向け） */
   tagline: string;
+  /** 一覧に出す短いサブタイトル（こども向け） */
+  kidTagline: string;
   /** 例: "トランスポート層の上 (TCP)" */
   layer: string;
   rfcs: { rfc: number; title: string }[];

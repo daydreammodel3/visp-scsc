@@ -3,8 +3,12 @@
 > **VIS**ualize communication **P**rotocols as **S**mall, **C**ute, **S**tylized **C**haracters.
 
 ネットワークプロトコルのハンドシェイクを、RFC の内容にそって **1手ずつ** たどれる学習用 Web アプリです。
-パケットはかわいいミニキャラで描かれていて、小学生でも楽しめる「やさしい」説明と、
-フィールドや RFC の節番号まで載せた「くわしい」説明を切り替えられます。
+パケットはかわいいミニキャラで描かれています。説明は 2 モードあり、画面右上で切り替えられます。
+
+- **大人向け**（標準）: メッセージの要約・技術的な説明・主なフィールド・RFC の節へのリンク
+- **こども向け**: 小学生でも読めるひらがな中心のやさしい説明。ボタンなどの画面の文言もこども向けになる
+
+選んだモードはブラウザに保存されます。
 
 ## 対応プロトコル
 
@@ -51,7 +55,9 @@ CLI を使う場合は `npx vercel` → `npx vercel --prod`。
 1. `src/protocols/<id>.ts` を作り、`Protocol` 型（`src/protocols/types.ts`）のオブジェクトを書く
    - `actors`: 登場するノード（3 つ以上でも可。列が自動で並ぶ）。`icon` は `laptop` / `server` / `router`
    - `phases`: 図の背景の帯になる段階
-   - `steps`: メッセージを順番に。`from` / `to` / `phase` / `look`（キャラの色と小物）/ `kid`（やさしい説明）/ `detail`（くわしい説明）/ `fields` / `rfc`
+   - `steps`: メッセージを順番に。`from` / `to` / `phase` / `look`（キャラの色と小物）/ `summary`・`detail`（大人向けの要約と説明）/ `kidTitle`・`kid`（こども向け）/ `fields` / `rfc`
+   - プロトコル自体にも `tagline`・`intro`（大人向け）と `kidTagline`・`kidIntro`（こども向け）を書く
+   - 画面の固定文言は `src/lib/text.ts` にモード別にまとまっている
    - 色は `src/protocols/colors.ts` の役割別カラーを使うと、プロトコルをまたいで見た目がそろいます
    - 小物（`Accessory`）: `wave` あいさつ, `key` 鍵交換, `scroll` 証明書, `pen` 署名, `flag` 完了, `box` データ, `bell` キープアライブ, `check` ACK, `gear` 設定, `ticket` チケット, `moon` 切断
 2. `src/protocols/index.ts` の `protocols` 配列に追加する

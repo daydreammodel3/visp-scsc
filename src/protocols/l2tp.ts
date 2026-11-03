@@ -10,6 +10,7 @@ function zlb(id: string, phase: string, ns: number, nr: number, ackOf: string): 
     message: 'ZLB (ACK)',
     phase,
     look: { color: C.ack, accessory: 'check' },
+    summary: `${ackOf} の受信確認（ZLB）`,
     kidTitle: 'うけとったよ！',
     kid: `「${ackOf} を ちゃんと うけとったよ！」と へんじだけを する、なかみが からっぽの おてがみだよ。`,
     detail: `AVP を持たない制御メッセージで、${ackOf} の受信確認だけを行う。ZLB は自分の Ns を進めない。Nr は「次に受け取りたい Ns」を表す。`,
@@ -24,7 +25,8 @@ function zlb(id: string, phase: string, ns: number, nr: number, ackOf: string): 
 export const l2tp: Protocol = {
   id: 'l2tp',
   name: 'L2TP (v2)',
-  tagline: 'PPP を インターネットごしに はこぶ トンネル',
+  tagline: 'PPP を UDP でトンネリングする L2TPv2',
+  kidTagline: 'PPP を インターネットごしに はこぶ トンネル',
   layer: 'UDP 1701 の上（多くは IPsec で保護: L2TP/IPsec）',
   rfcs: [
     { rfc: 2661, title: 'Layer Two Tunneling Protocol "L2TP"' },
@@ -53,6 +55,7 @@ export const l2tp: Protocol = {
       message: 'SCCRQ',
       phase: 'tunnel',
       look: { color: C.hello, accessory: 'wave' },
+      summary: '制御コネクション（トンネル）の確立を要求',
       kidTitle: 'トンネル つくっても いい？',
       kid: 'パソコンさんが「こんにちは！ ぼくと トンネルを つくろう。ぼくの トンネルばんごうは これだよ」と おねがいするよ。',
       detail:
@@ -78,6 +81,7 @@ export const l2tp: Protocol = {
       message: 'SCCRP',
       phase: 'tunnel',
       look: { color: C.hello2, accessory: 'wave' },
+      summary: 'トンネル確立要求に応答し、自身のトンネル ID を通知',
       kidTitle: 'いいよ！',
       kid: 'サーバーさんが「いいよ！ ぼくの トンネルばんごうは これだよ」と こたえるよ。',
       detail:
@@ -98,6 +102,7 @@ export const l2tp: Protocol = {
       message: 'SCCCN',
       phase: 'tunnel',
       look: { color: C.setup, accessory: 'check' },
+      summary: 'トンネルの確立を完了',
       kidTitle: 'トンネル かんせい！',
       kid: 'パソコンさんが「ありがとう！ トンネル かんせいだね」と つたえるよ。',
       detail:
@@ -116,6 +121,7 @@ export const l2tp: Protocol = {
       message: 'ICRQ',
       phase: 'session',
       look: { color: C.hello, accessory: 'gear' },
+      summary: 'トンネル内にセッションの確立を要求',
       kidTitle: 'へやを つくっても いい？',
       kid: 'トンネルの なかに、おはなし用の「へや（セッション）」を つくりたいな。「ぼくの へやばんごうは これだよ」。',
       detail:
@@ -135,6 +141,7 @@ export const l2tp: Protocol = {
       message: 'ICRP',
       phase: 'session',
       look: { color: C.hello2, accessory: 'gear' },
+      summary: 'セッション ID を割り当てて応答',
       kidTitle: 'いいよ！',
       kid: 'サーバーさんが「いいよ！ ぼくの へやばんごうは これ」と こたえるよ。',
       detail: 'Incoming-Call-Reply。LNS 側のセッション ID を Assigned Session ID で返す。',
@@ -152,6 +159,7 @@ export const l2tp: Protocol = {
       message: 'ICCN',
       phase: 'session',
       look: { color: C.setup, accessory: 'check' },
+      summary: '接続パラメータを伝えてセッション確立を完了',
       kidTitle: 'へや かんせい！',
       kid: '「へや かんせい！ これで おてがみを おくれるね」。',
       detail:
@@ -172,6 +180,7 @@ export const l2tp: Protocol = {
       message: 'データメッセージ (PPP)',
       phase: 'data',
       look: { color: C.data, accessory: 'box' },
+      summary: 'PPP フレームをデータメッセージで転送',
       kidTitle: 'おてがみを とどけるよ',
       kid: 'へやが できたので、PPP という おてがみを トンネルの なかで はこぶよ。さいしょに PPP どうしで あいさつと なまえチェックを して、それから ほんとうの データを はこぶんだ。',
       detail:
@@ -189,6 +198,7 @@ export const l2tp: Protocol = {
       message: 'データメッセージ (PPP)',
       phase: 'data',
       look: { color: C.data, accessory: 'box' },
+      summary: '逆方向の PPP フレームを転送',
       kidTitle: 'おへんじも どうぞ',
       kid: 'サーバーさんからの おへんじも、おなじ へやを とおって とどくよ。',
       detail: '逆方向は相手の割り当てた Tunnel ID / Session ID をヘッダーに入れる。',
@@ -205,6 +215,7 @@ export const l2tp: Protocol = {
       message: 'HELLO',
       phase: 'keep',
       look: { color: C.keepalive, accessory: 'bell' },
+      summary: '制御チャネルの死活確認（キープアライブ）',
       kidTitle: 'げんき？',
       kid: 'しばらく おてがみが ないと、「げんき？ まだ そこに いる？」と ベルを ならして たしかめるよ。',
       detail:
@@ -223,6 +234,7 @@ export const l2tp: Protocol = {
       message: 'CDN',
       phase: 'close',
       look: { color: C.bye, accessory: 'moon' },
+      summary: 'セッションの切断を通知',
       kidTitle: 'へやを かたづけるね',
       kid: '「おはなし おしまい。へやを かたづけるね」と つたえるよ。',
       detail:
@@ -243,6 +255,7 @@ export const l2tp: Protocol = {
       message: 'StopCCN',
       phase: 'close',
       look: { color: C.bye, accessory: 'moon' },
+      summary: 'トンネル全体の切断を通知',
       kidTitle: 'トンネルも しまうね',
       kid: '「トンネルも もう つかわないから しまうね。またね！」',
       detail:

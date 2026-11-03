@@ -3,6 +3,7 @@ import type { Protocol } from '../protocols/types';
 import { ActorIconShape } from './ActorIcon';
 import { PacketBuddyShape } from './PacketBuddy';
 import { easeInOut, useTween } from '../lib/useTween';
+import { splitName, type Mode } from '../lib/text';
 
 interface Layout {
   VB_W: number;
@@ -35,6 +36,7 @@ function useLayout(ref: RefObject<HTMLDivElement | null>): Layout {
 
 interface Props {
   protocol: Protocol;
+  mode: Mode;
   /** 0 = まだ何も送っていない, 1..n = n 番目のステップまで送った */
   current: number;
   onSelect: (index: number) => void;
@@ -45,7 +47,8 @@ function ArrowHead({ x, y, dir, color }: { x: number; y: number; dir: number; co
   return <path d={`M${x} ${y} L${x - dir * 13} ${y - 7.5} L${x - dir * 13} ${y + 7.5} Z`} fill={color} strokeLinejoin="round" />;
 }
 
-export function SequenceDiagram({ protocol, current, onSelect, travelMs }: Props) {
+export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }: Props) {
+  const kid = mode === 'kid';
   const { actors, steps, phases } = protocol;
   const scrollRef = useRef<HTMLDivElement>(null);
   const L = useLayout(scrollRef);
@@ -110,14 +113,14 @@ export function SequenceDiagram({ protocol, current, onSelect, travelMs }: Props
               <rect x="8" y={y1} width="8" height={y2 - y1} rx="4" fill={phase.color} />
               {L.compact ? (
                 <text x="24" y={y1 + 17} className="phase-inline">
-                  {phase.kidName}
-                  <tspan className="phase-inline-tech"> {phase.name}</tspan>
+                  {kid ? phase.kidName : phase.name}
+                  {kid && <tspan className="phase-inline-tech"> {phase.name}</tspan>}
                 </text>
               ) : (
                 <foreignObject x="22" y={y1 + 8} width={GUTTER_L - 64} height={y2 - y1 - 12}>
                   <div className="phase-label">
-                    <span className="phase-kid">{phase.kidName}</span>
-                    <span className="phase-tech">{phase.name}</span>
+                    <span className="phase-kid">{kid ? phase.kidName : phase.name}</span>
+                    {kid && <span className="phase-tech">{phase.name}</span>}
                   </div>
                 </foreignObject>
               )}
@@ -128,14 +131,17 @@ export function SequenceDiagram({ protocol, current, onSelect, travelMs }: Props
         {/* 登場人物と生命線 */}
         {actors.map((a) => {
           const x = actorX.get(a.id)!;
+          const [main, sub] = splitName(a.name);
+          const title = kid ? a.kidName : main;
+          const caption = kid ? main : sub;
           return (
             <g key={a.id}>
               <line x1={x} y1={HEADER - 14} x2={x} y2={height - 20} stroke="#b9b3c7" strokeWidth="3" strokeDasharray="2 9" strokeLinecap="round" />
               <g transform={`translate(${x - 50 * L.ACTOR_SCALE} 6) scale(${L.ACTOR_SCALE})`}>
                 <ActorIconShape kind={a.icon} />
               </g>
-              <text x={x} y={100 * L.ACTOR_SCALE + 26} textAnchor="middle" className="actor-kid">{a.kidName}</text>
-              <text x={x} y={100 * L.ACTOR_SCALE + 44} textAnchor="middle" className="actor-tech">{a.name.replace(/（.*）/, '')}</text>
+              <text x={x} y={100 * L.ACTOR_SCALE + 26} textAnchor="middle" className="actor-kid">{title}</text>
+              <text x={x} y={100 * L.ACTOR_SCALE + 44} textAnchor="middle" className="actor-tech">{caption}</text>
             </g>
           );
         })}
@@ -160,7 +166,7 @@ export function SequenceDiagram({ protocol, current, onSelect, travelMs }: Props
               className={`msg msg-${state}`}
               role="button"
               tabIndex={0}
-              aria-label={`${i}手目: ${s.message}`}
+              aria-label={`${i}: ${s.message} — ${kid ? s.kidTitle : s.summary}`}
               aria-current={isCurrent ? 'step' : undefined}
               onClick={() => onSelect(i)}
               onKeyDown={(e) => {
