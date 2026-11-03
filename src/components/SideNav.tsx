@@ -1,10 +1,14 @@
 import type { Category } from '../protocols/types';
+import type { ComparePreset } from '../protocols/compare';
 import type { Mode } from '../lib/text';
 
 interface Props {
   id: string;
   categories: Category[];
   currentId: string;
+  compares: ComparePreset[];
+  currentCompareId?: string;
+  onSelectCompare: (id: string) => void;
   mode: Mode;
   label: string;
   onSelect: (id: string) => void;
@@ -14,7 +18,19 @@ interface Props {
 }
 
 /** 左側のプロトコルメニュー */
-export function SideNav({ id, categories, currentId, mode, label, onSelect, onClose, closeLabel }: Props) {
+export function SideNav({
+  id,
+  categories,
+  currentId,
+  compares,
+  currentCompareId,
+  onSelectCompare,
+  mode,
+  label,
+  onSelect,
+  onClose,
+  closeLabel,
+}: Props) {
   const kid = mode === 'kid';
   return (
     <nav id={id} className="sidenav" aria-label={label}>
@@ -28,7 +44,7 @@ export function SideNav({ id, categories, currentId, mode, label, onSelect, onCl
           <h2 className="nav-heading">{kid ? c.kidName : c.name}</h2>
           <ul>
             {c.protocols.map((p) => {
-              const on = p.id === currentId;
+              const on = !currentCompareId && p.id === currentId;
               return (
                 <li key={p.id}>
                   <button
@@ -46,6 +62,27 @@ export function SideNav({ id, categories, currentId, mode, label, onSelect, onCl
           </ul>
         </div>
       ))}
+      <div className="nav-group">
+        <h2 className="nav-heading">{kid ? 'くらべて みよう' : '比較'}</h2>
+        <ul>
+          {compares.map((c) => {
+            const on = c.id === currentCompareId;
+            return (
+              <li key={c.id}>
+                <button
+                  type="button"
+                  className={on ? 'nav-item on' : 'nav-item'}
+                  aria-current={on ? 'page' : undefined}
+                  onClick={() => onSelectCompare(c.id)}
+                >
+                  <span className="nav-name">{kid ? c.kidName : c.name}</span>
+                  <span className="nav-tag">{kid ? c.kidTagline : c.tagline}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </nav>
   );
 }

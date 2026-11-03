@@ -3,14 +3,33 @@ import { PacketBuddy } from './PacketBuddy';
 import { rfcLabel, rfcUrl } from '../lib/rfc';
 import { UI, type Mode } from '../lib/text';
 import { KeyInventory } from './KeyInventory';
+import { VizView } from './VizView';
+import { statesAt } from '../lib/nodeStates';
+import { findProtocol } from '../protocols';
 
 interface Props {
   protocol: Protocol;
   current: number;
   mode: Mode;
+  onNavigate?: (protocolId: string, step: number) => void;
 }
 
-export function StepDetail({ protocol, current, mode }: Props) {
+function NodeStates({ protocol, current, kid }: { protocol: Protocol; current: number; kid: boolean }) {
+  const st = statesAt(protocol, current);
+  if (!st) return null;
+  return (
+    <div className="node-states" aria-label={kid ? 'いまの じょうたい' : '各ノードの状態'}>
+      {protocol.actors.map((a) => (
+        <span key={a.id} className={st[a.id].changed ? 'node-state changed' : 'node-state'}>
+          <small>{kid ? a.kidName : a.name.replace(/（.*）/, '')}</small>
+          <b>{st[a.id].state}</b>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export function StepDetail({ protocol, current, mode, onNavigate }: Props) {
   if (current === 0) return <Intro protocol={protocol} mode={mode} />;
   const ui = UI[mode];
   const kid = mode === 'kid';
@@ -62,7 +81,11 @@ export function StepDetail({ protocol, current, mode }: Props) {
         {step.encrypted && <span className="chip chip-lock">🔒 {ui.encrypted}</span>}
         {step.optional && <span className="chip chip-opt">※ {ui.optional}</span>}
         {step.danger && <span className="chip chip-danger">⚠ {ui.danger}</span>}
+        {step.lost && <span className="chip chip-danger">✕ {ui.lost}</span>}
       </div>
+
+      <NodeStates protocol={protocol} current={current} kid={kid} />
+      {step.viz && <VizView viz={step.viz} kid={kid} />}
 
       {kid ? (
         <p className="kid-text">{step.kid}</p>
@@ -88,18 +111,34 @@ export function StepDetail({ protocol, current, mode }: Props) {
         </>
       )}
 
-      {step.rfc && step.rfc.length > 0 && (
+      {((step.rfc?.length ?? 0) > 0 || (step.refs?.length ?? 0) > 0) && (
         <p className="rfc-links">
           <span>{ui.refs}</span>
-          {step.rfc.map((r) => (
+          {step.rfc?.map((r) => (
             <a key={rfcLabel(r)} href={rfcUrl(r)} target="_blank" rel="noreferrer">
               {rfcLabel(r)}
             </a>
           ))}
+          {step.refs?.map((r) => (
+            <a key={r.url + r.label} href={r.url} target="_blank" rel="noreferrer">
+              {r.label}
+            </a>
+          ))}
         </p>
       )}
+      {step.see && onNavigate && <SeeLink see={step.see} kid={kid} onNavigate={onNavigate} />}
       <KeyInventory protocol={protocol} current={current} mode={mode} />
     </article>
+  );
+}
+
+function SeeLink({ see, kid, onNavigate }: { see: { protocol: string; step?: number }; kid: boolean; onNavigate: (p: string, s: number) => void }) {
+  const target = findProtocol(see.protocol);
+  if (!target) return null;
+  return (
+    <button type="button" className="see-link" onClick={() => onNavigate(target.id, see.step ?? 0)}>
+      {kid ? `「${target.name}」を くわしく みる →` : `「${target.name}」で詳しく見る →`}
+    </button>
   );
 }
 
@@ -129,7 +168,7 @@ function Intro({ protocol, mode }: { protocol: Protocol; mode: Mode }) {
         </dd>
         <dt>{ui.layer}</dt>
         <dd>{protocol.layer}</dd>
-        <dt>RFC</dt>
+        <dt>{protocol.standards?.length ? (kid ? 'もとに なった きまり' : 'RFC・規格') : 'RFC'}</dt>
         <dd>
           <ul className="rfc-list">
             {protocol.rfcs.map((r) => (
@@ -138,6 +177,14 @@ function Intro({ protocol, mode }: { protocol: Protocol; mode: Mode }) {
                   RFC {r.rfc}
                 </a>{' '}
                 <small>{r.title}</small>
+              </li>
+            ))}
+            {protocol.standards?.map((d) => (
+              <li key={d.url}>
+                <a href={d.url} target="_blank" rel="noreferrer">
+                  {d.label}
+                </a>{' '}
+                <small>{d.title}</small>
               </li>
             ))}
           </ul>
@@ -154,6 +201,7 @@ function Intro({ protocol, mode }: { protocol: Protocol; mode: Mode }) {
           <span>{ui.legendDash}</span>
         </div>
       </div>
+      <NodeStates protocol={protocol} current={0} kid={kid} />
       <KeyInventory protocol={protocol} current={0} mode={mode} />
     </article>
   );

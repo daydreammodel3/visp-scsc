@@ -71,6 +71,15 @@ const TAP_LABEL: Record<TapKind, [string, string]> = {
   relay: ['転送', 'リレー'],
 };
 
+function LostMark({ x, y }: { x: number; y: number }) {
+  return (
+    <g className="lost-mark">
+      <circle cx={x} cy={y} r="11" />
+      <path d={`M${x - 5} ${y - 5} L${x + 5} ${y + 5} M${x + 5} ${y - 5} L${x - 5} ${y + 5}`} />
+    </g>
+  );
+}
+
 function ArrowHead({ x, y, dir, color }: { x: number; y: number; dir: number; color: string }) {
   return <path d={`M${x} ${y} L${x - dir * 13} ${y - 7.5} L${x - dir * 13} ${y + 7.5} Z`} fill={color} strokeLinejoin="round" />;
 }
@@ -253,7 +262,9 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
           const state = isCurrent ? 'current' : isPast ? 'past' : 'future';
           const phase = phases.find((p) => p.id === s.phase);
           const stroke = state === 'future' ? '#cfc9da' : s.encrypted ? '#3aa8d8' : (phase?.color ?? '#888');
-          const xEnd = isCurrent ? x1 + (x2 - x1) * t : x2;
+          // 消失したパケットは真ん中で止まる
+          const xStop = s.lost ? (x1 + x2) / 2 : x2;
+          const xEnd = isCurrent ? x1 + (xStop - x1) * t : xStop;
           const dir = Math.sign(x2 - x1) || 1;
           const label = `${s.danger ? '⚠ ' : ''}${s.encrypted ? '🔒 ' : ''}${s.message}${s.optional ? ' ※' : ''}`;
           const local = s.from === s.to;
@@ -308,7 +319,7 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
                     <line
                       x1={x1}
                       y1={y}
-                      x2={isCurrent && tRaw < 1 ? xEnd : xEnd - dir * 8}
+                      x2={(isCurrent && tRaw < 1) || s.lost ? xEnd : xEnd - dir * 8}
                       y2={y}
                       stroke={stroke}
                       strokeWidth={isCurrent ? 5 : 3.5}
@@ -316,7 +327,8 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
                       strokeDasharray={s.optional ? '10 7' : undefined}
                     />
                   )}
-                  {(isPast || (isCurrent && tRaw >= 1)) && <ArrowHead x={x2} y={y} dir={dir} color={stroke} />}
+                  {(isPast || (isCurrent && tRaw >= 1)) &&
+                    (s.lost ? <LostMark x={xStop} y={y} /> : <ArrowHead x={x2} y={y} dir={dir} color={stroke} />)}
                   {state === 'future' && (
                     <line
                       x1={x1}
@@ -357,14 +369,18 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
             const x2 = actorX.get(s.to)!;
             const local = s.from === s.to;
             const dir = local ? selfLoopDir(s.from) : Math.sign(x2 - x1) || 1;
-            const x = local ? x1 + dir * (BUDDY * 0.5 + 44) : x1 + dir * BUDDY * 0.2 + (x2 - x1 - dir * BUDDY * 0.75) * t;
+            const travel = s.lost ? (x2 - x1) / 2 - dir * BUDDY * 0.6 : x2 - x1 - dir * BUDDY * 0.75;
+            const x = local ? x1 + dir * (BUDDY * 0.5 + 44) : x1 + dir * BUDDY * 0.2 + travel * t;
             const y = local ? rowY(current) - 12 : rowY(current);
             const flip = local ? dir > 0 : x2 < x1;
             const hop = tRaw < 1 ? (local ? (1 - t) * 26 : Math.abs(Math.sin(tRaw * Math.PI * 6)) * 6) : 0;
             const scale = BUDDY / 100;
             return (
-              <g transform={`translate(${x - BUDDY / 2} ${y - BUDDY - 2 - hop})`} pointerEvents="none">
-                <g className={tRaw >= 1 ? 'buddy-idle' : undefined}>
+              <g transform={`translate(${x - BUDDY / 2} ${y - BUDDY - 2 - hop})`} pointerEvents="none" opacity={s.lost && tRaw >= 1 ? 0.55 : 1}>
+                <g
+                  className={tRaw >= 1 && !s.lost ? 'buddy-idle' : undefined}
+                  transform={s.lost && tRaw >= 1 ? `rotate(${dir * 80} ${BUDDY / 2} ${BUDDY})` : undefined}
+                >
                   <g transform={`scale(${scale})${flip ? ' translate(100 0) scale(-1 1)' : ''}`}>
                     <PacketBuddyShape
                       color={s.look.color}

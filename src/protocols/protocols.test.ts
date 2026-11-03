@@ -4,6 +4,8 @@ import { parseHash, toHash } from '../lib/route';
 import { rfcLabel, rfcUrl } from '../lib/rfc';
 import { inventoryAt } from '../lib/inventory';
 import { categories } from './index';
+import { comparePresets, presetProtocols } from './compare';
+import { statesAt } from '../lib/nodeStates';
 
 describe('プロトコル定義', () => {
   it('すべてのプロトコルがちょうど 1 つのカテゴリに入っている', () => {
@@ -70,6 +72,25 @@ describe('プロトコル定義', () => {
 
       it('ブロードキャストとノード内処理は両立しない', () => {
         for (const s of p.steps) if (s.broadcast) expect(s.from, s.id).not.toBe(s.to);
+      });
+
+      it('see（詳しく見る）のリンク先が存在する', () => {
+        for (const s of p.steps)
+          if (s.see) {
+            const target = protocols.find((x) => x.id === s.see!.protocol);
+            expect(target, `${s.id} → ${s.see.protocol}`).toBeDefined();
+            expect(s.see.step ?? 0).toBeLessThanOrEqual(target!.steps.length);
+          }
+      });
+
+      it('states / initialStates は定義済みのノードを指す', () => {
+        const ids = new Set(p.actors.map((a) => a.id));
+        for (const id of Object.keys(p.initialStates ?? {})) expect(ids).toContain(id);
+        for (const s of p.steps) for (const id of Object.keys(s.states ?? {})) expect(ids, s.id).toContain(id);
+      });
+
+      it('lost（消失）はノード間のメッセージにだけ使う', () => {
+        for (const s of p.steps) if (s.lost) expect(s.from, s.id).not.toBe(s.to);
       });
 
       it('すべてのフェーズが使われている', () => {
@@ -208,5 +229,81 @@ describe('ネットワークの基本', () => {
 
   it('ping: Echo は ルーターを経由する', () => {
     for (const s of find('ping').steps.filter((s) => s.message.startsWith('Echo') && s.to !== 'r')) expect(s.via).toEqual(['r']);
+  });
+});
+
+describe('比較表示', () => {
+  it('プリセットの左右が存在し、ID が重複しない', () => {
+    const ids = comparePresets.map((c) => c.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const c of comparePresets) {
+      const [a, b] = presetProtocols(c);
+      expect(a, c.left).toBeDefined();
+      expect(b, c.right).toBeDefined();
+      expect(c.left).not.toBe(c.right);
+    }
+  });
+  it('比較のハッシュを往復できる', () => {
+    const r = parseHash('#/compare/tls/3');
+    expect(r.compareId).toBe('tls');
+    expect(toHash(r)).toBe('#/compare/tls/3');
+    expect(parseHash('#/compare/nope/3').compareId).toBeUndefined();
+  });
+});
+
+describe('TCP と シナリオ', () => {
+  const find = (id: string) => protocols.find((p) => p.id === id)!;
+  it('TCP: 最後には双方が接続を閉じている', () => {
+    const tcp = find('tcp');
+    const st = statesAt(tcp, tcp.steps.length)!;
+    expect(st.s.state).toBe('CLOSED');
+    expect(st.c.state).toBe('TIME-WAIT');
+    expect(statesAt(tcp, 3)!.c.state).toBe('ESTABLISHED');
+    expect(statesAt(tcp, 3)!.s.state).toBe('ESTABLISHED');
+  });
+  it('TCP: seq / ack の番号が一貫している', () => {
+    const tcp = find('tcp');
+    const nums = (id: string) => tcp.steps.find((s) => s.id === id)!.message;
+    expect(nums('synack')).toContain('ack=1001');
+    expect(nums('ack')).toContain('ack=5001');
+    expect(nums('data-ack')).toContain('ack=1101');
+    expect(nums('fin-ack')).toContain('ack=1102');
+    expect(nums('last-ack')).toContain('ack=5002');
+  });
+  it('シナリオ: DHCP → ARP → DNS → TCP → TLS → HTTP の順', () => {
+    const order = find('web').steps.map((s) => s.phase).filter((p, i, a) => a.indexOf(p) === i);
+    expect(order).toEqual(['dhcp', 'arp', 'dns', 'tcp', 'tls', 'http', 'render']);
+  });
+  it('シナリオ: PC は最後にページとセッション鍵を持つ', () => {
+    const web = find('web');
+    const pc = inventoryAt(web, web.steps.length).pc.map((h) => h.id);
+    expect(pc).toEqual(expect.arrayContaining(['ip', 'gwMac', 'webIp', 'conn', 'keys', 'html']));
+  });
+  it('シナリオ: ゲートウェイの MAC を知る前に、外部ネットワークへは送らない', () => {
+    const web = find('web');
+    const arpDone = web.steps.findIndex((s) => s.id === 'arp-rep');
+    web.steps.forEach((s, i) => {
+      if (s.via?.includes('gw')) expect(i, s.id).toBeGreaterThan(arpDone);
+    });
+  });
+});
+
+describe('暗号アルゴリズムのレッスン', () => {
+  const find = (id: string) => protocols.find((p) => p.id === id)!;
+  it('AES: 最終の暗号文が FIPS 197 の値', () => {
+    expect(find('aes').items!.ct.label).toContain('3925841d02dc09fbdc118597196a0b32');
+  });
+  it('DES: 総当たりでイブが鍵を得る / AES では得られない', () => {
+    const des = find('des');
+    const aes = find('aes');
+    expect(inventoryAt(des, des.steps.length).e.map((h) => h.id)).toContain('key');
+    expect(inventoryAt(aes, aes.steps.length).e.map((h) => h.id)).not.toContain('key');
+  });
+  it('PQC: イブは ML-KEM の秘密鍵も共有秘密も持たない', () => {
+    const pqc = find('pqc');
+    const eve = inventoryAt(pqc, pqc.steps.length).e.map((h) => h.id);
+    expect(eve).not.toContain('dk');
+    expect(eve).not.toContain('m');
+    expect(eve).toContain('ek');
   });
 });

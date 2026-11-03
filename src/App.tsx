@@ -6,7 +6,9 @@ import { StepDetail } from './components/StepDetail';
 import { PacketBuddy } from './components/PacketBuddy';
 import { SideNav } from './components/SideNav';
 import { useMediaQuery } from './lib/useMediaQuery';
-import { parseHash, toHash } from './lib/route';
+import { compareLength, parseHash, toHash } from './lib/route';
+import { CompareView } from './components/CompareView';
+import { comparePresets, findPreset } from './protocols/compare';
 import { UI, loadMode, saveMode, type Mode } from './lib/text';
 
 function loadNavPref(): boolean {
@@ -45,7 +47,8 @@ export default function App() {
   };
 
   const protocol = findProtocol(route.protocolId) ?? protocols[0];
-  const total = protocol.steps.length;
+  const preset = findPreset(route.compareId);
+  const total = preset ? compareLength(preset.id) : protocol.steps.length;
   const current = route.step;
 
   // URL のハッシュと同期（共有・ブラウザの戻る に対応）
@@ -68,6 +71,21 @@ export default function App() {
     setPlaying(false);
     setRoute({ protocolId: id, step: 0 });
     if (narrow) setDrawerOpen(false);
+  };
+
+  const selectCompare = (id: string) => {
+    const p = findPreset(id);
+    if (!p) return;
+    setPlaying(false);
+    setRoute({ protocolId: p.left, compareId: id, step: 0 });
+    if (narrow) setDrawerOpen(false);
+  };
+
+  /** 別のプロトコルの特定のステップへ移動（「詳しく見る」など） */
+  const navigate = (id: string, step: number) => {
+    setPlaying(false);
+    setRoute({ protocolId: id, step });
+    window.scrollTo({ top: 0 });
   };
 
   // スマホのメニューは Esc で閉じる
@@ -177,6 +195,9 @@ export default function App() {
             id="sidenav"
             categories={categories}
             currentId={protocol.id}
+            compares={comparePresets}
+            currentCompareId={preset?.id}
+            onSelectCompare={selectCompare}
             mode={mode}
             label={ui.pickProtocol}
             onSelect={selectProtocol}
@@ -186,23 +207,37 @@ export default function App() {
         )}
         {narrow && drawerOpen && <div className="backdrop" onClick={() => setDrawerOpen(false)} aria-hidden="true" />}
         <div className="content">
-          <main className="stage">
-            <section className="panel panel-diagram" aria-label={ui.diagram}>
-              <SequenceDiagram
-                protocol={protocol}
-                mode={mode}
-                current={current}
-                travelMs={SPEEDS[speed].travel}
-                onSelect={(i) => {
-                  setPlaying(false);
-                  goTo(i);
-                }}
-              />
-            </section>
-            <section className="panel panel-detail" aria-live="polite">
-              <StepDetail protocol={protocol} current={current} mode={mode} />
-            </section>
-          </main>
+          {preset ? (
+            <CompareView
+              preset={preset}
+              step={current}
+              mode={mode}
+              travelMs={SPEEDS[speed].travel}
+              onSelect={(i) => {
+                setPlaying(false);
+                goTo(i);
+              }}
+              onOpen={navigate}
+            />
+          ) : (
+            <main className="stage">
+              <section className="panel panel-diagram" aria-label={ui.diagram}>
+                <SequenceDiagram
+                  protocol={protocol}
+                  mode={mode}
+                  current={current}
+                  travelMs={SPEEDS[speed].travel}
+                  onSelect={(i) => {
+                    setPlaying(false);
+                    goTo(i);
+                  }}
+                />
+              </section>
+              <section className="panel panel-detail" aria-live="polite">
+                <StepDetail protocol={protocol} current={current} mode={mode} onNavigate={navigate} />
+              </section>
+            </main>
+          )}
 
           <footer className="dock">
             <StepControls

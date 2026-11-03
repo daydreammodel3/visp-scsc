@@ -1,0 +1,149 @@
+import type { Protocol } from './types';
+import { findProtocol } from './index';
+
+/** 2 つのプロトコルを並べて比べるプリセット */
+export interface ComparePreset {
+  id: string;
+  name: string;
+  kidName: string;
+  tagline: string;
+  kidTagline: string;
+  left: string;
+  right: string;
+  /** 比較のポイント（大人向け / こども向け） */
+  points: { adult: string; kid: string }[];
+  /** 表に追加する行（左, 右） */
+  rows?: { label: string; kidLabel: string; left: string; right: string }[];
+}
+
+export const comparePresets: ComparePreset[] = [
+  {
+    id: 'tls',
+    name: 'TLS 1.2 と TLS 1.3',
+    kidName: 'TLS 1.2 と 1.3',
+    tagline: '往復回数・暗号化の範囲・鍵交換の違い',
+    kidTagline: 'あたらしい ほうが はやくて あんぜん',
+    left: 'tls12',
+    right: 'tls13',
+    rows: [
+      { label: 'データ送信までの往復', kidLabel: 'おはなし できるまで', left: '2-RTT', right: '1-RTT' },
+      { label: '鍵交換', kidLabel: 'かぎの つくりかた', left: 'RSA / (EC)DHE', right: '(EC)DHE のみ（前方秘匿性あり）' },
+      { label: '証明書', kidLabel: 'みぶんしょう', left: '平文で送る', right: '暗号化して送る' },
+    ],
+    points: [
+      {
+        adult: 'TLS 1.3 は ClientHello に key_share を入れて最初から鍵交換を始めるため、ハンドシェイクが 1 往復短い。',
+        kid: 'TLS 1.3 は さいしょの あいさつで かぎの ざいりょうを わたすから、1おうふく はやいよ。',
+      },
+      {
+        adult: 'TLS 1.3 では ServerHello 以降のハンドシェイクが暗号化され、証明書も盗聴者から見えない。',
+        kid: 'TLS 1.3 は みぶんしょうも かぎつきで おくるよ。',
+      },
+      {
+        adult: 'TLS 1.3 は静的 RSA 鍵交換・ChangeCipherSpec・CBC モードや RC4 などの古い暗号を廃止した。',
+        kid: 'ふるくて あぶない やりかたは ぜんぶ やめたんだ。',
+      },
+    ],
+  },
+  {
+    id: 'kex',
+    name: 'RSA 鍵輸送と Diffie-Hellman',
+    kidName: 'RSA と ディフィー・ヘルマン',
+    tagline: '鍵を「送る」か「一緒に作る」か。前方秘匿性の違い',
+    kidTagline: 'かぎを おくる？ いっしょに つくる？',
+    left: 'rsa-kex',
+    right: 'dh',
+    rows: [
+      { label: '共通鍵の作り方', kidLabel: 'かぎの つくりかた', left: '片方が作って暗号化して送る', right: '双方の秘密から一緒に計算する' },
+      { label: '前方秘匿性', kidLabel: 'あとから ばれない？', left: 'なし', right: 'あり（エフェメラル DH）' },
+      { label: '量子コンピューター', kidLabel: 'みらいの コンピューター', left: '破られる', right: '破られる' },
+    ],
+    points: [
+      {
+        adult: 'RSA 鍵輸送では、サーバーの秘密鍵が将来漏れると、記録された過去の通信がすべて解読される。',
+        kid: 'RSA は ボブさんの かぎが ぬすまれると、むかしの おはなしも ぜんぶ ばれちゃう。',
+      },
+      {
+        adult: 'DH では共有秘密が通信路に一度も流れない。毎回使い捨ての秘密を使えば前方秘匿性が得られる。',
+        kid: 'ディフィー・ヘルマンは かぎを おくらないで つくるから、あとから ばれないよ。',
+      },
+      {
+        adult: 'どちらも認証は別に必要（証明書と署名）。どちらも量子コンピューターには弱く、ML-KEM への移行が進む。',
+        kid: 'どちらも みらいの コンピューターには まけちゃうから、あたらしい あんごうが ひつようだよ。',
+      },
+    ],
+  },
+  {
+    id: 'cipher',
+    name: 'DES と AES',
+    kidName: 'DES と AES',
+    tagline: '鍵長・ブロック長・構造の違い',
+    kidTagline: 'むかしの あんごうと いまの あんごう',
+    left: 'des',
+    right: 'aes',
+    rows: [
+      { label: '鍵長', kidLabel: 'かぎの ながさ', left: '56 ビット', right: '128 / 192 / 256 ビット' },
+      { label: 'ブロック長', kidLabel: 'いちどに あつかう おおきさ', left: '64 ビット', right: '128 ビット' },
+      { label: '構造・段数', kidLabel: 'しくみ', left: 'Feistel 構造・16 段', right: 'SPN 構造・10 / 12 / 14 ラウンド' },
+      { label: '現在の扱い', kidLabel: 'いまは？', left: '使用禁止（総当たりで破れる）', right: '標準（TLS・IPsec・Wi-Fi など）' },
+    ],
+    points: [
+      {
+        adult: 'DES の 2⁵⁶ 通りの鍵は 1998 年に 56 時間で総当たりされた。AES-128 の 2¹²⁸ 通りは現実的に探索できない。',
+        kid: 'DES の かぎは ぜんぶ ためせちゃうけど、AES の かぎは おおすぎて ためせないよ。',
+      },
+      {
+        adult: 'DES は左右半分を交互に処理する Feistel 構造、AES は全バイトを毎ラウンド変換する SPN 構造。',
+        kid: 'DES は はんぶんずつ、AES は ぜんぶを いっぺんに まぜるよ。',
+      },
+      {
+        adult: 'DES（と 3DES）の 64 ビットブロックは大量データで衝突しやすい（Sweet32）。AES は 128 ビットブロック。',
+        kid: 'AES は いちどに あつかう かたまりが おおきいから、たくさん おくっても あんしん。',
+      },
+    ],
+  },
+  {
+    id: 'pq',
+    name: 'Diffie-Hellman と ML-KEM',
+    kidName: 'ディフィー・ヘルマンと ML-KEM',
+    tagline: '量子コンピューターへの耐性とデータサイズの違い',
+    kidTagline: 'いまの かぎの わたしかたと みらいの わたしかた',
+    left: 'dh',
+    right: 'pqc',
+    rows: [
+      { label: '安全性の根拠', kidLabel: 'なにが むずかしい？', left: '離散対数問題', right: '格子問題（Module-LWE）' },
+      { label: '量子コンピューター', kidLabel: 'みらいの コンピューター', left: 'Shor のアルゴリズムで破られる', right: '耐性あり（と考えられている）' },
+      { label: '公開値のサイズ', kidLabel: 'おくる おおきさ', left: 'X25519: 32 バイト', right: 'ML-KEM-768: 1184 / 1088 バイト' },
+      { label: '方式', kidLabel: 'やりかた', left: '鍵合意（双方が計算）', right: '鍵カプセル化（片方が包んで送る）' },
+    ],
+    points: [
+      {
+        adult: 'DH は双方が公開値を送り合う鍵合意、ML-KEM は公開鍵で共有秘密を「カプセル化」して送る方式。流れは RSA 鍵輸送に近い。',
+        kid: 'ML-KEM は、ひみつを つつんで おくる やりかただよ。',
+      },
+      {
+        adult: 'ML-KEM は鍵や暗号文が大きいので、TLS では X25519 と組み合わせたハイブリッド（X25519MLKEM768）で導入されている。',
+        kid: 'いまは、むかしの やりかたと あたらしい やりかたを りょうほう つかって あんしんを ふやしているよ。',
+      },
+    ],
+  },
+];
+
+export function findPreset(id: string | undefined): ComparePreset | undefined {
+  return comparePresets.find((p) => p.id === id);
+}
+
+export interface Metrics {
+  messages: number;
+  encrypted: number;
+  local: number;
+}
+
+export function metrics(p: Protocol): Metrics {
+  const msgs = p.steps.filter((s) => s.from !== s.to);
+  return { messages: msgs.length, encrypted: msgs.filter((s) => s.encrypted).length, local: p.steps.length - msgs.length };
+}
+
+export function presetProtocols(preset: ComparePreset): [Protocol, Protocol] {
+  return [findProtocol(preset.left)!, findProtocol(preset.right)!];
+}

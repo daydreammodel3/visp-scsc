@@ -59,6 +59,27 @@ export interface KeyItem {
   color: string;
 }
 
+/** 暗号の内部状態などを図で見せるための表示 */
+export type Viz =
+  | {
+      kind: 'grid';
+      /** AES の 4×4 状態（列優先の 16 バイト） */
+      before?: number[];
+      after: number[];
+      caption: string;
+    }
+  | {
+      kind: 'rows';
+      /** DES の左右半分・ビット列など。hl は強調 */
+      rows: { label: string; value: string; hl?: boolean }[];
+      caption?: string;
+    };
+
+export interface DocRef {
+  label: string;
+  url: string;
+}
+
 export interface Field {
   name: string;
   value: string;
@@ -85,6 +106,16 @@ export interface Step {
   broadcast?: boolean;
   /** 途中で中継するノード（ルーターなど）。「転送」の印が付く */
   via?: string[];
+  /** 途中で失われたパケット（矢印が途中で ✕ になる） */
+  lost?: boolean;
+  /** このステップのあとの各ノードの状態（TCP の状態遷移など） */
+  states?: Record<string, string>;
+  /** 暗号の内部状態などの図 */
+  viz?: Viz;
+  /** RFC 以外の参照（NIST FIPS など） */
+  refs?: DocRef[];
+  /** 「くわしく見る」リンク（別のプロトコルの該当ステップへ） */
+  see?: { protocol: string; step?: number };
   /**
    * このステップのあとで各ノードが新しく手に入れる持ち物（Protocol.items の ID）。
    * 送信者と受信者以外のノード（盗聴者など）を入れると、途中で盗み見たことを表す。
@@ -113,6 +144,8 @@ export interface Protocol {
   /** 例: "トランスポート層の上 (TCP)" */
   layer: string;
   rfcs: { rfc: number; title: string }[];
+  /** RFC 以外の規格（FIPS など） */
+  standards?: (DocRef & { title: string })[];
   kidIntro: string;
   intro: string;
   actors: Actor[];
@@ -122,6 +155,8 @@ export interface Protocol {
   items?: Record<string, KeyItem>;
   /** 最初から各ノードが持っている持ち物 */
   initial?: Record<string, string[]>;
+  /** 最初の各ノードの状態（states を使う場合） */
+  initialStates?: Record<string, string>;
 }
 
 export interface Category {
