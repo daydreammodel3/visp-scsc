@@ -303,7 +303,7 @@ export const webScenario: Protocol = {
       kidTitle: 'ホームページが みえた！',
       kid: 'やっと ホームページが みえたよ！ たくさんの パケットたちが リレーして はこんで くれたんだね。',
       detail:
-        'ネットワーク接続後、DNS（1 往復）→ TCP（1 往復）→ TLS 1.3（1 往復）→ HTTP（1 往復）の約 4 往復で最初の HTML が届く。TLS 1.2 ならさらに 1 往復、HTTP/3（QUIC）なら TCP と TLS がまとまって 1 往復少なくなる。',
+        'ネットワーク接続後、DNS（1 往復）→ TCP（1 往復）→ TLS 1.3（1 往復）→ HTTP（1 往復）の約 4 往復で最初の HTML が届く。TLS 1.2 ならさらに 1 往復、HTTP/3（QUIC）なら TCP と TLS がまとまって 1 往復少なくなる（「比較」の HTTP/2 と HTTP/3 を参照）。',
     },
   ],
 };

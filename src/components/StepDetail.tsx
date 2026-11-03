@@ -19,12 +19,14 @@ function NodeStates({ protocol, current, kid }: { protocol: Protocol; current: n
   if (!st) return null;
   return (
     <div className="node-states" aria-label={kid ? 'いまの じょうたい' : '各ノードの状態'}>
-      {protocol.actors.map((a) => (
-        <span key={a.id} className={st[a.id].changed ? 'node-state changed' : 'node-state'}>
-          <small>{kid ? a.kidName : a.name.replace(/（.*）/, '')}</small>
-          <b>{st[a.id].state}</b>
-        </span>
-      ))}
+      {protocol.actors
+        .filter((a) => st[a.id].state !== '—')
+        .map((a) => (
+          <span key={a.id} className={st[a.id].changed ? 'node-state changed' : 'node-state'}>
+            <small>{kid ? a.kidName : a.name.replace(/（.*）/, '')}</small>
+            <b>{st[a.id].state}</b>
+          </span>
+        ))}
     </div>
   );
 }
@@ -132,7 +134,15 @@ export function StepDetail({ protocol, current, mode, onNavigate }: Props) {
   );
 }
 
-function SeeLink({ see, kid, onNavigate }: { see: { protocol: string; step?: number }; kid: boolean; onNavigate: (p: string, s: number) => void }) {
+function SeeLink({
+  see,
+  kid,
+  onNavigate,
+}: {
+  see: { protocol: string; step?: number };
+  kid: boolean;
+  onNavigate: (p: string, s: number) => void;
+}) {
   const target = findProtocol(see.protocol);
   if (!target) return null;
   return (

@@ -28,7 +28,10 @@
 | ネットワークの基本 | ARP | RFC 826, RFC 5227 | ブロードキャストの Request とユニキャストの Reply、ARP キャッシュ、Gratuitous ARP |
 | ネットワークの基本 | ping (ICMP) | RFC 792, RFC 1122 | Echo Request / Reply（ルーター経由）と、TTL 切れの Time Exceeded |
 | ネットワークの基本 | TCP | RFC 9293, RFC 6298 | 3 ウェイハンドシェイク・パケット消失と再送・4 ウェイ切断。各ノードの TCP 状態を表示 |
-| ネットワークの基本 | HTTP/1.1 | RFC 9110〜9112 | GET と 200 OK、持続的接続、ETag による 304 Not Modified |
+| Web（HTTP） | HTTP/1.1 | RFC 9110〜9112 | GET と 200 OK、持続的接続、ETag による 304 Not Modified |
+| Web（HTTP） | HTTPS | RFC 9110, 6066, 7301, 5280, 6797 | http:// からの 301 リダイレクト、SNI と ALPN、証明書のパス検証、HSTS。盗聴者に見えるもの・見えないものを持ち物パネルで確認 |
+| Web（HTTP） | HTTP/2 | RFC 9113, 7541 | TCP＋TLS（ALPN h2）、プリフェイスと SETTINGS、HPACK、ストリームの多重化とインターリーブ、GOAWAY |
+| Web（HTTP） | HTTP/3（QUIC） | RFC 9114, 9000, 9001, 9002, 9204 | Alt-Svc / HTTPS RR での発見、1-RTT の QUIC ハンドシェイク、HoL ブロッキングのないパケット消失と再送、コネクションマイグレーション |
 | ネットワークの基本 | DNS | RFC 1034, RFC 1035, RFC 9156 | リゾルバーによるルート → TLD → 権威サーバーの反復問い合わせとキャッシュ |
 | セキュア通信 | TLS 1.2 | RFC 5246, RFC 8422 | ECDHE_RSA のフルハンドシェイク（2-RTT）〜 close_notify |
 | セキュア通信 | TLS 1.3 | RFC 8446 | 1-RTT フルハンドシェイク、NewSessionTicket、close_notify |
@@ -41,7 +44,7 @@
 - シーケンス図の上をパケットキャラが歩いて届く
 - 左側のプロトコルメニューは、左上のハンバーガーボタンで表示／非表示を切り替えられる（PC では開閉状態を記憶、スマホではドロワー表示）
 - 鍵交換のレッスンでは、通信路の真ん中に盗聴者イブがいて、盗み見たメッセージに「コピー」の印が付く。各ノードが持っている鍵・値を一覧する持ち物パネルで、イブが共有鍵を手に入れられないことを確かめられる
-- **比較表示**: TLS 1.2 と 1.3、RSA 鍵輸送と DH、DES と AES、DH と ML-KEM を左右に並べて同じ手数ずつ進められる。違いの表とポイント付き（URL は `#/compare/tls/0` など）
+- **比較表示**: TLS 1.2 と 1.3、RSA 鍵輸送と DH、DES と AES、DH と ML-KEM、HTTP/2 と HTTP/3 を左右に並べて同じ手数ずつ進められる。違いの表とポイント付き（URL は `#/compare/tls/0` など）
 - 暗号アルゴリズムの値（AES・DES・3DES・おもちゃの LWE）は `src/crypto/` の学習用実装でブラウザ上で計算しており、FIPS 197 などの公式テストベクタでテストしている
 - 「最初 / 戻る / 自動再生 / 進む / 最後」ボタン、スライダー、速さ切り替え
 - キーボード操作：`←` `→` で 1手ずつ、`Space` で自動再生、`Home` / `End`

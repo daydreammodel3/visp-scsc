@@ -129,6 +129,37 @@ export const comparePresets: ComparePreset[] = [
   },
 ];
 
+comparePresets.push({
+  id: 'h2h3',
+  name: 'HTTP/2 と HTTP/3',
+  kidName: 'HTTP/2 と HTTP/3',
+  tagline: 'TCP＋TLS と QUIC。接続までの往復と、パケット消失の影響',
+  kidTagline: 'でんわと かぎを べつべつに？ いっぺんに？',
+  left: 'http2',
+  right: 'http3',
+  rows: [
+    { label: 'トランスポート', kidLabel: 'はこびかた', left: 'TCP（＋ TLS 1.3）', right: 'QUIC（UDP、TLS 1.3 を内蔵）' },
+    { label: 'リクエストまでの往復', kidLabel: 'おねがい できるまで', left: '2-RTT（TCP 1 ＋ TLS 1）', right: '1-RTT（再接続なら 0-RTT も可）' },
+    { label: 'パケット消失の影響', kidLabel: 'カードが なくなったら', left: '全ストリームが止まる（TCP の HoL）', right: '失われたストリームだけ待つ' },
+    { label: 'アドレスが変わったら', kidLabel: 'でんぱが かわったら', left: '接続が切れる', right: 'コネクション ID で継続' },
+    { label: 'ヘッダー圧縮', kidLabel: 'みじかく する ほうほう', left: 'HPACK', right: 'QPACK' },
+  ],
+  points: [
+    {
+      adult: 'HTTP/3 は TCP の 3 ウェイハンドシェイクと TLS を QUIC の 1 回のハンドシェイクにまとめたので、リクエストを送れるまでが 1 往復短い。両方の図で GET の位置を比べてみよう。',
+      kid: 'HTTP/3 は でんわと かぎを いっぺんに つくるから、1おうふく はやく おねがい できるよ。',
+    },
+    {
+      adult: 'HTTP/2 もストリームを多重化するが、その下の TCP は 1 本のバイト列なので、1 パケットの消失で全ストリームが待たされる。QUIC はストリームごとに順序を管理するのでこれが起きない。',
+      kid: 'HTTP/2 は カードが 1まい なくなると ぜんぶ まつけど、HTTP/3 は なくなった ぶんだけ まてば いいよ。',
+    },
+    {
+      adult: 'QUIC は UDP 上で動くため、UDP を遮断するネットワークでは使えず、ブラウザは HTTP/2 にフォールバックする。',
+      kid: 'HTTP/3 が つかえない ばしょでは、HTTP/2 に もどして つかうよ。',
+    },
+  ],
+});
+
 export function findPreset(id: string | undefined): ComparePreset | undefined {
   return comparePresets.find((p) => p.id === id);
 }

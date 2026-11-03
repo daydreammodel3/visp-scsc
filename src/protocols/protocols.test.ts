@@ -307,3 +307,50 @@ describe('暗号アルゴリズムのレッスン', () => {
     expect(eve).toContain('ek');
   });
 });
+
+describe('Web（HTTP/2・HTTP/3・HTTPS）', () => {
+  const find = (id: string) => protocols.find((p) => p.id === id)!;
+  const reqIndex = (id: string) => find(id).steps.findIndex((s) => /GET \/(?!style|app)/.test(s.message)) + 1;
+
+  it('HTTP/3 は HTTP/2 より少ない手数で最初の GET に到達する（TCP と TLS を QUIC にまとめる）', () => {
+    const h2 = find('http2');
+    const h3 = find('http3');
+    const h2Msgs = h2.steps.slice(0, reqIndex('http2')).filter((s) => s.from !== s.to).length;
+    const h3Msgs = h3.steps.slice(0, reqIndex('http3')).filter((s) => s.from !== s.to).length;
+    expect(h3Msgs).toBeLessThan(h2Msgs);
+  });
+
+  it('HTTP/2: クライアントのストリーム ID は奇数', () => {
+    for (const s of find('http2').steps) {
+      const m = s.message.match(/stream (\d+)/);
+      if (m && s.from === 'c') expect(Number(m[1]) % 2, s.id).toBe(1);
+    }
+  });
+
+  it('HTTP/3: 消失したパケットのストリーム以外は先に届き、再送は新しいパケット番号', () => {
+    const steps = find('http3').steps;
+    const lost = steps.findIndex((s) => s.lost);
+    const nums = steps.map((s) => Number(s.message.match(/#(\d+)/)?.[1] ?? NaN)).filter((n) => !Number.isNaN(n));
+    expect(new Set(nums).size).toBe(nums.length);
+    expect(steps[lost + 1].gives?.c).toContain('js');
+  });
+
+  it('HTTP/3: マイグレーション後にクライアントのアドレスが変わる', () => {
+    const h3 = find('http3');
+    expect(statesAt(h3, 0)!.c.state).toContain('Wi-Fi');
+    expect(statesAt(h3, h3.steps.length)!.c.state).toContain('モバイル');
+  });
+
+  it('HTTPS: 盗聴者は SNI と暗号文は見えるが、鍵もページも得られない', () => {
+    const p = find('https');
+    const eve = inventoryAt(p, p.steps.length).e.map((h) => h.id);
+    expect(eve).toEqual(expect.arrayContaining(['sni', 'enc', 'plainReq']));
+    expect(eve).not.toContain('keys');
+    expect(eve).not.toContain('page');
+  });
+
+  it('HTTPS: 「詳しく見る」で HTTP/2 の GET に飛ぶ', () => {
+    const see = find('https').steps.find((s) => s.id === 'get')!.see!;
+    expect(find(see.protocol).steps[see.step! - 1].message).toContain('GET /');
+  });
+});
