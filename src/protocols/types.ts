@@ -46,7 +46,7 @@ export interface RfcRef {
 }
 
 /** 鍵や値の種類。持ち物パネルでのバッジ表示に使う */
-export type ItemKind = 'public' | 'secret' | 'shared' | 'cipher' | 'plain';
+export type ItemKind = 'public' | 'secret' | 'shared' | 'cipher' | 'plain' | 'info';
 
 /** ノードが持つ鍵・値（持ち物パネルに表示される） */
 export interface KeyItem {
@@ -81,6 +81,10 @@ export interface Step {
   optional?: boolean;
   /** やってはいけない操作（赤い「危険」表示） */
   danger?: boolean;
+  /** ブロードキャスト。from と to の間にいるノードにも「受信」の印が付く */
+  broadcast?: boolean;
+  /** 途中で中継するノード（ルーターなど）。「転送」の印が付く */
+  via?: string[];
   /**
    * このステップのあとで各ノードが新しく手に入れる持ち物（Protocol.items の ID）。
    * 送信者と受信者以外のノード（盗聴者など）を入れると、途中で盗み見たことを表す。

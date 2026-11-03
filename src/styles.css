@@ -339,6 +339,24 @@ button {
   stroke: #6c5ce7;
   stroke-width: 3;
 }
+.tap.tap-recv circle {
+  stroke: #1d9bf0;
+}
+.tap.tap-recv text {
+  fill: #1d6fa5;
+}
+.tap.tap-relay circle {
+  stroke: #2ecc71;
+}
+.tap.tap-relay text {
+  fill: #18794e;
+}
+.actor-kid.actor-many {
+  font-size: 12.5px;
+}
+.actor-tech.actor-many {
+  font-size: 10px;
+}
 .tap text {
   font-size: 10px;
   font-weight: 800;
@@ -933,6 +951,10 @@ button {
 .k-plain {
   background: #e7f8ef;
   color: #18794e;
+}
+.k-info {
+  background: #f1eadf;
+  color: #6b5a3e;
 }
 .chip-danger {
   background: #ffe3e3;

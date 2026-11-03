@@ -8,6 +8,7 @@ const KIND: Record<ItemKind, { adult: string; kid: string; cls: string }> = {
   shared: { adult: '共有鍵', kid: 'ふたりの かぎ', cls: 'k-shared' },
   cipher: { adult: '暗号文', kid: 'かぎつき', cls: 'k-cipher' },
   plain: { adult: '平文', kid: 'よめる', cls: 'k-plain' },
+  info: { adult: '情報', kid: 'メモ', cls: 'k-info' },
 };
 
 interface Props {
@@ -23,8 +24,8 @@ export function KeyInventory({ protocol, current, mode }: Props) {
   const inv = inventoryAt(protocol, current);
   const kid = mode === 'kid';
   return (
-    <section className="inventory" aria-label={kid ? 'みんなが もっているもの' : '各ノードが持っている値'}>
-      <h3>{kid ? 'みんなが もっているもの' : '各ノードが持っている鍵・値'}</h3>
+    <section className="inventory" aria-label={kid ? 'みんなが もっているもの' : '各ノードが持っている情報'}>
+      <h3>{kid ? 'みんなが もっているもの' : '各ノードが持っている鍵・情報'}</h3>
       <div className="inv-grid">
         {protocol.actors.map((a) => (
           <div key={a.id} className={`inv-col${a.icon === 'eve' ? ' inv-eve' : ''}`}>

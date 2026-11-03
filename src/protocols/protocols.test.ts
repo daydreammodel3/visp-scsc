@@ -58,6 +58,20 @@ describe('プロトコル定義', () => {
           for (const actor of Object.keys(s.gives ?? {})) expect(actor, s.id).toBe(s.from);
       });
 
+      it('via（中継ノード）は存在し、送信者と受信者の間に並んでいる', () => {
+        const idx = new Map(p.actors.map((a, i) => [a.id, i]));
+        for (const s of p.steps)
+          for (const v of s.via ?? []) {
+            expect(idx.has(v), `${s.id} via ${v}`).toBe(true);
+            const [f, t, m] = [idx.get(s.from)!, idx.get(s.to)!, idx.get(v)!];
+            expect((m - f) * (m - t), `${s.id}: ${v} は ${s.from} と ${s.to} の間にない`).toBeLessThan(0);
+          }
+      });
+
+      it('ブロードキャストとノード内処理は両立しない', () => {
+        for (const s of p.steps) if (s.broadcast) expect(s.from, s.id).not.toBe(s.to);
+      });
+
       it('すべてのフェーズが使われている', () => {
         const used = new Set(p.steps.map((s) => s.phase));
         for (const ph of p.phases) expect(used, ph.id).toContain(ph.id);
@@ -152,5 +166,47 @@ describe('鍵交換の持ち物', () => {
     const inv = inventoryAt(protocols.find((p) => p.id === 'dh')!, 2);
     expect(inv.a.find((h) => h.id === 'a')?.fresh).toBe(true);
     expect(inv.a.find((h) => h.id === 'pg')?.fresh).toBe(false);
+  });
+});
+
+describe('ネットワークの基本', () => {
+  const find = (id: string) => protocols.find((p) => p.id === id)!;
+  const holds = (pid: string, step: number, actor: string) => inventoryAt(find(pid), step)[actor].map((h) => h.id);
+
+  it('ARP: ブロードキャストを受けた無関係なホストはキャッシュに登録しない', () => {
+    const arp = find('arp');
+    expect(holds('arp', arp.steps.length, 'c')).toEqual([]);
+    expect(holds('arp', arp.steps.length, 'a')).toContain('aCacheB');
+    expect(holds('arp', arp.steps.length, 'b')).toContain('bCacheA');
+  });
+
+  it('ARP: Request はブロードキャスト、Reply はユニキャスト', () => {
+    const arp = find('arp');
+    expect(arp.steps.find((s) => s.id === 'request')!.broadcast).toBe(true);
+    expect(arp.steps.find((s) => s.id === 'reply')!.broadcast).toBeFalsy();
+  });
+
+  it('DHCP: DORA の順で、ACK を受けてから IP アドレスを持つ', () => {
+    const dhcp = find('dhcp');
+    expect(dhcp.steps.slice(0, 4).map((s) => s.message.split('（')[0])).toEqual(['DHCPDISCOVER', 'DHCPOFFER', 'DHCPREQUEST', 'DHCPACK']);
+    expect(holds('dhcp', 3, 'c')).not.toContain('ip');
+    expect(holds('dhcp', 4, 'c')).toContain('ip');
+  });
+
+  it('DNS: クライアントは自分では反復問い合わせをせず、リゾルバーだけがルート・TLD・権威と話す', () => {
+    const dns = find('dns');
+    for (const s of dns.steps) {
+      if (s.from === 'c' || s.to === 'c') expect([s.from, s.to].sort()).toEqual(['c', 'r']);
+    }
+  });
+
+  it('SSH: NEWKEYS より後のメッセージはすべて暗号化される', () => {
+    const steps = find('ssh').steps;
+    const last = steps.map((s) => s.message).lastIndexOf('SSH_MSG_NEWKEYS');
+    steps.forEach((s, i) => expect(!!s.encrypted, s.id).toBe(i > last));
+  });
+
+  it('ping: Echo は ルーターを経由する', () => {
+    for (const s of find('ping').steps.filter((s) => s.message.startsWith('Echo') && s.to !== 'r')) expect(s.via).toEqual(['r']);
   });
 });

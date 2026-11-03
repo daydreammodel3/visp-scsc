@@ -1,0 +1,146 @@
+import type { Protocol } from './types';
+import { C, P } from './colors';
+
+export const arp: Protocol = {
+  id: 'arp',
+  name: 'ARP',
+  tagline: 'IP アドレスから同じ LAN 内の MAC アドレスを調べる',
+  kidTagline: '「この じゅうしょの人 だれ？」と よびかけて へやばんごうを しる',
+  layer: 'イーサネット上（EtherType 0x0806）。IP の下で動く',
+  rfcs: [
+    { rfc: 826, title: 'An Ethernet Address Resolution Protocol' },
+    { rfc: 5227, title: 'IPv4 Address Conflict Detection' },
+  ],
+  kidIntro:
+    'おなじ ネットワークの なかで おてがみを とどけるには、じゅうしょ（IP アドレス）だけでなく、あいての「へやばんごう」（MAC アドレス）も ひつようなんだ。しらないときは「192.168.1.20 の人、へやばんごうを おしえて！」と みんなに よびかけるよ。',
+  intro:
+    'イーサネットのフレームは MAC アドレス宛てに配送されるため、同じサブネット内のホストに IP パケットを送るには宛先 IP に対応する MAC アドレスが必要になる。ARP は宛先 IP を問い合わせるリクエストをブロードキャストし、該当するホストだけがユニキャストで応答する。結果は ARP キャッシュに一定時間保存される。ここでは PC-A が PC-B（192.168.1.20）に初めて通信する場面を示す。',
+  actors: [
+    { id: 'a', name: 'PC-A（192.168.1.10）', kidName: 'Aさん', icon: 'laptop' },
+    { id: 'c', name: 'PC-C（192.168.1.30）', kidName: 'Cさん', icon: 'laptop' },
+    { id: 'b', name: 'PC-B（192.168.1.20）', kidName: 'Bさん', icon: 'laptop' },
+  ],
+  phases: [
+    { id: 'lookup', name: 'キャッシュ確認', kidName: 'メモを みる', color: P.keep },
+    { id: 'resolve', name: 'アドレス解決', kidName: 'へやばんごうを きく', color: P.hello },
+    { id: 'send', name: 'フレーム送信', kidName: 'おてがみを とどける', color: P.data },
+    { id: 'announce', name: 'Gratuitous ARP', kidName: 'おしらせ', color: P.auth },
+  ],
+  items: {
+    aCacheB: { label: 'ARP: 192.168.1.20 → bb:bb:bb:bb:bb:bb', kidLabel: 'Bさんの へやばんごう', kind: 'info', color: '#1dd1a1' },
+    bCacheA: { label: 'ARP: 192.168.1.10 → aa:aa:aa:aa:aa:aa', kidLabel: 'Aさんの へやばんごう', kind: 'info', color: '#ff9f43' },
+  },
+  steps: [
+    {
+      id: 'lookup',
+      from: 'a',
+      to: 'a',
+      message: 'ARP キャッシュを確認',
+      phase: 'lookup',
+      look: { color: C.keepalive, accessory: 'gear' },
+      summary: '宛先は同じサブネット。ARP キャッシュに MAC アドレスがない',
+      kidTitle: 'へやばんごう しらないな…',
+      kid: 'Aさんは Bさんに おてがみを おくりたい。Bさんは おなじ ネットワークに いるけど、へやばんごうの メモが ないよ。',
+      detail:
+        '宛先 192.168.1.20 は自分のサブネット（192.168.1.0/24）内なので直接配送する。ARP キャッシュに該当エントリがないため ARP で解決する。サブネット外が宛先なら、デフォルトゲートウェイの MAC アドレスを ARP で調べる。',
+      fields: [
+        { name: '宛先 IP', value: '192.168.1.20' },
+        { name: '自分', value: '192.168.1.10/24' },
+        { name: 'ARP キャッシュ', value: '該当なし' },
+      ],
+    },
+    {
+      id: 'request',
+      from: 'a',
+      to: 'b',
+      message: 'ARP Request（ブロードキャスト）',
+      phase: 'resolve',
+      broadcast: true,
+      look: { color: C.hello, accessory: 'wave' },
+      summary: '「192.168.1.20 の MAC アドレスは？」を LAN 全体に問い合わせる',
+      kidTitle: '192.168.1.20 の人 いますか？',
+      kid: 'Aさんが「192.168.1.20 の人、へやばんごうを おしえて！ ぼくは Aだよ」と みんなに よびかけるよ。Cさんにも Bさんにも とどくよ。',
+      detail:
+        '宛先 MAC ff:ff:ff:ff:ff:ff のブロードキャストフレーム。送信者の MAC と IP を含むので、受信したターゲットはそれを自分のキャッシュに登録できる。',
+      fields: [
+        { name: 'Ethernet', value: 'aa:aa:aa:aa:aa:aa → ff:ff:ff:ff:ff:ff, Type 0x0806' },
+        { name: 'opcode', value: '1 (request)' },
+        { name: '送信者 MAC / IP', value: 'aa:aa:aa:aa:aa:aa / 192.168.1.10' },
+        { name: 'ターゲット MAC / IP', value: '00:00:00:00:00:00 / 192.168.1.20' },
+      ],
+      rfc: [{ rfc: 826 }],
+      gives: { b: ['bCacheA'] },
+    },
+    {
+      id: 'c-ignore',
+      from: 'c',
+      to: 'c',
+      message: '自分宛てではないので破棄',
+      phase: 'resolve',
+      look: { color: C.ack, accessory: 'moon' },
+      summary: 'ターゲット IP が自分ではないホストは応答しない',
+      kidTitle: 'ぼくじゃないや',
+      kid: 'Cさんは「192.168.1.20 は ぼくじゃないな」と おもって、なにも しないよ。',
+      detail:
+        'ターゲット IP が自分のアドレスではないので応答しない。RFC 826 では、送信者のエントリがすでにキャッシュにある場合だけ更新し、なければ新規登録しない。',
+      rfc: [{ rfc: 826 }],
+    },
+    {
+      id: 'reply',
+      from: 'b',
+      to: 'a',
+      message: 'ARP Reply（ユニキャスト）',
+      phase: 'resolve',
+      look: { color: C.key, accessory: 'check' },
+      summary: '該当ホストが自分の MAC アドレスを直接返す',
+      kidTitle: 'ぼくだよ！ へやばんごうは これ',
+      kid: 'Bさんが「ぼくだよ！ へやばんごうは bb:bb… だよ」と Aさんだけに こたえるよ。Aさんは メモに かいておくよ。',
+      detail:
+        'ターゲットは送信者・ターゲットを入れ替えて opcode 2 で応答する。宛先は要求者の MAC へのユニキャスト。A は結果を ARP キャッシュに保存し、一定時間（OS により数十秒〜数分）再利用する。',
+      fields: [
+        { name: 'Ethernet', value: 'bb:bb:bb:bb:bb:bb → aa:aa:aa:aa:aa:aa' },
+        { name: 'opcode', value: '2 (reply)' },
+        { name: '送信者 MAC / IP', value: 'bb:bb:bb:bb:bb:bb / 192.168.1.20' },
+        { name: 'ターゲット MAC / IP', value: 'aa:aa:aa:aa:aa:aa / 192.168.1.10' },
+      ],
+      rfc: [{ rfc: 826 }],
+      gives: { a: ['aCacheB'] },
+    },
+    {
+      id: 'frame',
+      from: 'a',
+      to: 'b',
+      message: 'IP パケット（Ethernet フレーム）',
+      phase: 'send',
+      look: { color: C.data, accessory: 'box' },
+      summary: '解決した MAC アドレス宛てに IP パケットを送る',
+      kidTitle: 'おてがみを とどけるよ',
+      kid: 'へやばんごうが わかったので、Bさんの へやに おてがみを とどけられるよ。Cさんの ところには いかないよ。',
+      detail: 'Ethernet ヘッダーの宛先に B の MAC を入れて送る。スイッチは MAC アドレステーブルに従って B のポートにだけ転送する。',
+      fields: [
+        { name: 'Ethernet', value: 'aa:aa:aa:aa:aa:aa → bb:bb:bb:bb:bb:bb, Type 0x0800 (IPv4)' },
+        { name: 'IP', value: '192.168.1.10 → 192.168.1.20' },
+      ],
+    },
+    {
+      id: 'garp',
+      from: 'b',
+      to: 'a',
+      message: 'Gratuitous ARP（ブロードキャスト）',
+      phase: 'announce',
+      broadcast: true,
+      optional: true,
+      look: { color: C.cert, accessory: 'bell' },
+      summary: '自分の IP と MAC の対応を自発的に知らせる',
+      kidTitle: 'みんな、ぼくは ここだよ！',
+      kid: 'Bさんが「192.168.1.20 は ぼくで、へやばんごうは bb:bb… だよ」と じぶんから おしらせするよ。Bさんの メモを もっている 人は、メモを あたらしく かきなおすんだ。',
+      detail:
+        '自分の IP アドレスをターゲットにした ARP をブロードキャストする。起動時や MAC アドレスの変更時、冗長構成の切り替え時に、すでにエントリを持っているホストのキャッシュを更新させる（エントリを持たない C は新規登録しない）。RFC 5227 では、使う前にアドレスの重複を調べる ARP Probe と、使い始めを知らせる ARP Announcement が定められている。',
+      fields: [
+        { name: 'opcode', value: '1 (request)' },
+        { name: '送信者 IP / ターゲット IP', value: '192.168.1.20 / 192.168.1.20' },
+      ],
+      rfc: [{ rfc: 5227, section: '2.3' }],
+    },
+  ],
+};

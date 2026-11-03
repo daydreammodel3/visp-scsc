@@ -63,6 +63,14 @@ interface Props {
   travelMs: number;
 }
 
+type TapKind = 'copy' | 'recv' | 'relay';
+/** [大人向け, こども向け] */
+const TAP_LABEL: Record<TapKind, [string, string]> = {
+  copy: ['コピー', 'のぞき見'],
+  recv: ['受信', 'とどく'],
+  relay: ['転送', 'リレー'],
+};
+
 function ArrowHead({ x, y, dir, color }: { x: number; y: number; dir: number; color: string }) {
   return <path d={`M${x} ${y} L${x - dir * 13} ${y - 7.5} L${x - dir * 13} ${y + 7.5} Z`} fill={color} strokeLinejoin="round" />;
 }
@@ -138,6 +146,10 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
   }, [actors, VB_W, GUTTER_L, GUTTER_R]);
 
   /** ノード内の処理を描く向き: 一番右のノードだけ左へ、それ以外は右へ */
+  // ノードが多いときは見出しを小さくして重ならないようにする
+  const many = actors.length >= 4;
+  const actorScale = many ? L.ACTOR_SCALE * 0.72 : L.ACTOR_SCALE;
+
   const selfLoopDir = (id: string) => (actors.length > 1 && actors[actors.length - 1].id === id ? -1 : 1);
 
   const rowY = (i: number) => HEADER + (i - 1) * ROW + LINE_OFFSET; // i は 1 始まり
@@ -217,13 +229,13 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
                 strokeDasharray="2 9"
                 strokeLinecap="round"
               />
-              <g transform={`translate(${x - 50 * L.ACTOR_SCALE} 6) scale(${L.ACTOR_SCALE})`}>
+              <g transform={`translate(${x - 50 * actorScale} 6) scale(${actorScale})`}>
                 <ActorIconShape kind={a.icon} />
               </g>
-              <text x={x} y={100 * L.ACTOR_SCALE + 26} textAnchor="middle" className="actor-kid">
+              <text x={x} y={100 * actorScale + 26} textAnchor="middle" className={many ? 'actor-kid actor-many' : 'actor-kid'}>
                 {title}
               </text>
-              <text x={x} y={100 * L.ACTOR_SCALE + 44} textAnchor="middle" className="actor-tech">
+              <text x={x} y={100 * actorScale + 42} textAnchor="middle" className={many ? 'actor-tech actor-many' : 'actor-tech'}>
                 {caption}
               </text>
             </g>
@@ -246,13 +258,19 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
           const label = `${s.danger ? '⚠ ' : ''}${s.encrypted ? '🔒 ' : ''}${s.message}${s.optional ? ' ※' : ''}`;
           const local = s.from === s.to;
           const loopDir = selfLoopDir(s.from);
-          // 送信者・受信者以外で、このメッセージをコピーしたノード（盗聴など）
-          const taps = local
-            ? []
-            : Object.entries(s.gives ?? {})
-                .filter(([id, items]) => id !== s.from && id !== s.to && items.length > 0)
-                .map(([id]) => actorX.get(id))
-                .filter((x): x is number => x !== undefined && (x - x1) * (x - x2) < 0);
+          // 矢印の途中にいるノードの印: 中継（via）/ ブロードキャストの受信 / 盗み見（gives）
+          const between = (id: string) => {
+            const x = actorX.get(id);
+            return x !== undefined && (x - x1) * (x - x2) < 0;
+          };
+          const tapMap = new Map<string, TapKind>();
+          if (!local) {
+            for (const [id, items] of Object.entries(s.gives ?? {}))
+              if (id !== s.from && id !== s.to && items.length > 0 && between(id)) tapMap.set(id, 'copy');
+            if (s.broadcast) for (const a of actors) if (between(a.id) && !tapMap.has(a.id)) tapMap.set(a.id, 'recv');
+            for (const id of s.via ?? []) if (between(id)) tapMap.set(id, 'relay');
+          }
+          const taps = [...tapMap].map(([id, kind]) => ({ x: actorX.get(id)!, kind }));
           const tapVisible = (x: number) => isPast || (isCurrent && (xEnd - x) * dir >= 0);
           return (
             <g
@@ -312,12 +330,12 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
                     />
                   )}
                   {state === 'future' && <ArrowHead x={x2} y={y} dir={dir} color={stroke} />}
-                  {taps.map((tx) =>
+                  {taps.map(({ x: tx, kind }) =>
                     tapVisible(tx) ? (
-                      <g key={tx} className="tap">
+                      <g key={tx} className={`tap tap-${kind}`}>
                         <circle cx={tx} cy={y} r="8" />
                         <text x={tx} y={y - 12} textAnchor="middle">
-                          コピー
+                          {TAP_LABEL[kind][kid ? 1 : 0]}
                         </text>
                       </g>
                     ) : null,

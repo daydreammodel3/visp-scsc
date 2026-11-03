@@ -6,6 +6,11 @@ import { tls12 } from './tls12';
 import { tls13 } from './tls13';
 import { ipsec } from './ipsec';
 import { l2tp } from './l2tp';
+import { arp } from './arp';
+import { ping } from './ping';
+import { dhcp } from './dhcp';
+import { dns } from './dns';
+import { ssh } from './ssh';
 
 /**
  * 左メニューに並ぶカテゴリと、その中のプロトコル。
@@ -13,7 +18,8 @@ import { l2tp } from './l2tp';
  */
 export const categories: Category[] = [
   { id: 'crypto', name: '暗号と鍵交換の基礎', kidName: 'あんごうの きほん', protocols: [symmetric, rsaKex, dh] },
-  { id: 'secure', name: 'セキュア通信', kidName: 'ひみつの つうしん', protocols: [tls12, tls13] },
+  { id: 'basic', name: 'ネットワークの基本', kidName: 'ネットワークの きほん', protocols: [dhcp, arp, ping, dns] },
+  { id: 'secure', name: 'セキュア通信', kidName: 'ひみつの つうしん', protocols: [tls12, tls13, ssh] },
   { id: 'vpn', name: 'VPN・トンネル', kidName: 'トンネル', protocols: [ipsec, l2tp] },
 ];
 

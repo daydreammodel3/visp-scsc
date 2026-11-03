@@ -19,8 +19,13 @@
 | 暗号と鍵交換の基礎 | 共通鍵暗号と鍵配送問題 | RFC 5116, RFC 4949 | 同じ鍵で暗号化・復号する仕組みと、鍵を平文で送ると盗聴者に読まれてしまう問題 |
 | 暗号と鍵交換の基礎 | 公開鍵暗号で鍵を送る (RSA) | RFC 8017, RFC 5246 | 公開鍵でセッション鍵を暗号化して届ける。小さな数での RSA 計算と、前方秘匿性がない問題 |
 | 暗号と鍵交換の基礎 | Diffie-Hellman 鍵交換 | RFC 2631, RFC 7748 | p=23, g=5 での計算。こども向けは「えのぐを混ぜる」たとえ |
+| ネットワークの基本 | DHCP | RFC 2131, RFC 2132 | DORA（Discover / Offer / Request / Ack）・リース更新・解放。取得した設定を持ち物パネルに表示 |
+| ネットワークの基本 | ARP | RFC 826, RFC 5227 | ブロードキャストの Request とユニキャストの Reply、ARP キャッシュ、Gratuitous ARP |
+| ネットワークの基本 | ping (ICMP) | RFC 792, RFC 1122 | Echo Request / Reply（ルーター経由）と、TTL 切れの Time Exceeded |
+| ネットワークの基本 | DNS | RFC 1034, RFC 1035, RFC 9156 | リゾルバーによるルート → TLD → 権威サーバーの反復問い合わせとキャッシュ |
 | セキュア通信 | TLS 1.2 | RFC 5246, RFC 8422 | ECDHE_RSA のフルハンドシェイク（2-RTT）〜 close_notify |
 | セキュア通信 | TLS 1.3 | RFC 8446 | 1-RTT フルハンドシェイク、NewSessionTicket、close_notify |
+| セキュア通信 | SSH | RFC 4251〜4254, RFC 5656, RFC 8731 | バージョン交換・KEXINIT・curve25519 鍵交換とホスト鍵検証・公開鍵認証・チャネルとシェル |
 | VPN・トンネル | IPsec | RFC 7296 (IKEv2), RFC 4303 (ESP), RFC 4301 | IKE_SA_INIT / IKE_AUTH / ESP / CREATE_CHILD_SA / Delete |
 | VPN・トンネル | L2TP | RFC 2661 (L2TPv2), RFC 3193 | トンネル確立・セッション確立（Ns/Nr 付き）・PPP データ・HELLO・切断 |
 
@@ -65,6 +70,7 @@ CLI を使う場合は `npx vercel` → `npx vercel --prod`。
    - `steps`: メッセージを順番に。`from` / `to` / `phase` / `look`（キャラの色と小物）/ `summary`・`detail`（大人向けの要約と説明）/ `kidTitle`・`kid`（こども向け）/ `fields` / `rfc`
    - `from` と `to` を同じにすると、そのノードの中での処理（鍵の生成・計算など）として描かれる
    - `danger: true` で「危険な操作」の表示になる
+   - `broadcast: true` でブロードキャスト（間にいるノードに「受信」の印）、`via: ['r']` で中継ノード（「転送」の印）を表せる
    - 持ち物パネルを使う場合は、`items` に鍵・値を定義し、`initial`（最初から持っているもの）と各ステップの `gives`（そのステップで手に入れるもの）で ID を指定する。送信者・受信者以外のノードを `gives` に入れると、図に盗み見の「コピー」印が付く
    - プロトコル自体にも `tagline`・`intro`（大人向け）と `kidTagline`・`kidIntro`（こども向け）を書く
    - 画面の固定文言は `src/lib/text.ts` にモード別にまとまっている
