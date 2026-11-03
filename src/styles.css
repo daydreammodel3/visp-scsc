@@ -481,6 +481,21 @@ button {
   border-top: 4px dashed #b58cff;
 }
 
+.credit {
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+.credit abbr {
+  text-decoration: none;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+.credit b {
+  color: var(--accent-ink);
+}
+
 /* 操作バー */
 .dock {
   position: sticky;

@@ -1,4 +1,6 @@
-# ハンドシェイクずかん
+# ハンドシェイクずかん (visp-scsc)
+
+> **VIS**ualize communication **P**rotocols as **S**mall, **C**ute, **S**tylized **C**haracters.
 
 ネットワークプロトコルのハンドシェイクを、RFC の内容にそって **1手ずつ** たどれる学習用 Web アプリです。
 パケットはかわいいミニキャラで描かれていて、小学生でも楽しめる「やさしい」説明と、

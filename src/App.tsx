@@ -152,6 +152,11 @@ export default function App() {
         </section>
       </main>
 
+      <p className="credit">
+        <abbr title="VISualize communication Protocols as Small, Cute, Stylized Characters.">VISP-SCSC</abbr> —{' '}
+        <b>VIS</b>ualize communication <b>P</b>rotocols as <b>S</b>mall, <b>C</b>ute, <b>S</b>tylized <b>C</b>haracters.
+      </p>
+
       <footer className="dock">
         <StepControls
           current={current}
