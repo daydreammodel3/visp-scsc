@@ -163,6 +163,8 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
 
   const rowY = (i: number) => HEADER + (i - 1) * ROW + LINE_OFFSET; // i は 1 始まり
   const height = HEADER + steps.length * ROW + 40;
+  // ここより上（登場人物の見出し）は固定表示し、下だけをスクロールさせる
+  const BODY_TOP = HEADER - 10;
 
   // フェーズの帯（連続する同じフェーズをまとめる）
   const bands = useMemo(() => {
@@ -184,43 +186,15 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
     const el = scrollRef.current;
     if (!el) return;
     const scale = el.clientWidth / VB_W;
-    const target = current === 0 ? 0 : (rowY(current) - ROW * 1.6) * scale;
+    const target = current === 0 ? 0 : (rowY(current) - BODY_TOP - ROW * 1.2) * scale;
     el.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current, protocol.id, L]);
 
   return (
-    <div className="diagram-scroll" ref={scrollRef}>
-      <svg viewBox={`0 0 ${VB_W} ${height}`} className="diagram" role="group" aria-label={`${protocol.name} のシーケンス図`}>
-        {/* フェーズ帯 */}
-        {bands.map((b) => {
-          const phase = phases.find((p) => p.id === b.phaseId);
-          if (!phase) return null;
-          const y1 = rowY(b.from) - LINE_OFFSET + 4;
-          const y2 = rowY(b.to) - LINE_OFFSET + ROW - 4;
-          const reached = current >= b.from;
-          return (
-            <g key={`${b.phaseId}-${b.from}`} opacity={reached ? 1 : 0.45}>
-              <rect x="8" y={y1} width={VB_W - 16} height={y2 - y1} rx="16" fill={phase.color} fillOpacity="0.16" />
-              <rect x="8" y={y1} width="8" height={y2 - y1} rx="4" fill={phase.color} />
-              {L.compact ? (
-                <text x="24" y={y1 + 17} className="phase-inline">
-                  {kid ? phase.kidName : phase.name}
-                  {kid && <tspan className="phase-inline-tech"> {phase.name}</tspan>}
-                </text>
-              ) : (
-                <foreignObject x="22" y={y1 + 8} width={GUTTER_L - 64} height={y2 - y1 - 12}>
-                  <div className="phase-label">
-                    <span className="phase-kid">{kid ? phase.kidName : phase.name}</span>
-                    {kid && <span className="phase-tech">{phase.name}</span>}
-                  </div>
-                </foreignObject>
-              )}
-            </g>
-          );
-        })}
-
-        {/* 登場人物と生命線 */}
+    <div className="diagram-wrap">
+      {/* 登場人物の見出し（スクロールしても常に見える） */}
+      <svg viewBox={`0 0 ${VB_W} ${BODY_TOP}`} className="diagram diagram-head" aria-hidden="true">
         {actors.map((a) => {
           const x = actorX.get(a.id)!;
           const [main, sub] = splitName(a.name);
@@ -232,7 +206,7 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
                 x1={x}
                 y1={HEADER - 14}
                 x2={x}
-                y2={height - 20}
+                y2={BODY_TOP}
                 stroke="#b9b3c7"
                 strokeWidth="3"
                 strokeDasharray="2 9"
@@ -250,151 +224,209 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
             </g>
           );
         })}
-
-        {/* メッセージ矢印 */}
-        {steps.map((s, idx) => {
-          const i = idx + 1;
-          const x1 = actorX.get(s.from)!;
-          const x2 = actorX.get(s.to)!;
-          const y = rowY(i);
-          const isCurrent = i === current;
-          const isPast = i < current;
-          const state = isCurrent ? 'current' : isPast ? 'past' : 'future';
-          const phase = phases.find((p) => p.id === s.phase);
-          const stroke = state === 'future' ? '#cfc9da' : s.encrypted ? '#3aa8d8' : (phase?.color ?? '#888');
-          // 消失したパケットは真ん中で止まる
-          const xStop = s.lost ? (x1 + x2) / 2 : x2;
-          const xEnd = isCurrent ? x1 + (xStop - x1) * t : xStop;
-          const dir = Math.sign(x2 - x1) || 1;
-          const label = `${s.danger ? '⚠ ' : ''}${s.encrypted ? '🔒 ' : ''}${s.message}${s.optional ? ' ※' : ''}`;
-          const local = s.from === s.to;
-          const loopDir = selfLoopDir(s.from);
-          // 矢印の途中にいるノードの印: 中継（via）/ ブロードキャストの受信 / 盗み見（gives）
-          const between = (id: string) => {
-            const x = actorX.get(id);
-            return x !== undefined && (x - x1) * (x - x2) < 0;
-          };
-          const tapMap = new Map<string, TapKind>();
-          if (!local) {
-            for (const [id, items] of Object.entries(s.gives ?? {}))
-              if (id !== s.from && id !== s.to && items.length > 0 && between(id)) tapMap.set(id, 'copy');
-            if (s.broadcast) for (const a of actors) if (between(a.id) && !tapMap.has(a.id)) tapMap.set(a.id, 'recv');
-            for (const id of s.via ?? []) if (between(id)) tapMap.set(id, 'relay');
-          }
-          const taps = [...tapMap].map(([id, kind]) => ({ x: actorX.get(id)!, kind }));
-          const tapVisible = (x: number) => isPast || (isCurrent && (xEnd - x) * dir >= 0);
-          return (
-            <g
-              key={s.id}
-              className={`msg msg-${state}`}
-              role="button"
-              tabIndex={0}
-              aria-label={`${i}: ${s.message} — ${kid ? s.kidTitle : s.summary}`}
-              aria-current={isCurrent ? 'step' : undefined}
-              onClick={() => onSelect(i)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onSelect(i);
-                }
-              }}
-            >
-              <rect
-                x={GUTTER_L - 36}
-                y={y - LINE_OFFSET + 6}
-                width={VB_W - GUTTER_L - GUTTER_R + 72}
-                height={ROW - 10}
-                rx="14"
-                className="msg-hit"
-              />
-              <circle cx={GUTTER_L - 22} cy={y} r="11" className="msg-num" />
-              <text x={GUTTER_L - 22} y={y + 4.5} textAnchor="middle" className="msg-num-text">
-                {i}
-              </text>
-              {local ? (
-                <SelfStep x={x1} y={y} dir={loopDir} state={state} color={stroke} label={label} grow={isCurrent ? t : 1} vbWidth={VB_W} />
-              ) : (
-                <>
-                  {(isPast || isCurrent) && Math.abs(xEnd - x1) > 4 && (
-                    <line
-                      x1={x1}
-                      y1={y}
-                      x2={(isCurrent && tRaw < 1) || s.lost ? xEnd : xEnd - dir * 8}
-                      y2={y}
-                      stroke={stroke}
-                      strokeWidth={isCurrent ? 5 : 3.5}
-                      strokeLinecap="round"
-                      strokeDasharray={s.optional ? '10 7' : undefined}
-                    />
-                  )}
-                  {(isPast || (isCurrent && tRaw >= 1)) &&
-                    (s.lost ? <LostMark x={xStop} y={y} /> : <ArrowHead x={x2} y={y} dir={dir} color={stroke} />)}
-                  {state === 'future' && (
-                    <line
-                      x1={x1}
-                      y1={y}
-                      x2={x2 - dir * 8}
-                      y2={y}
-                      stroke={stroke}
-                      strokeWidth="2.5"
-                      strokeDasharray="3 8"
-                      strokeLinecap="round"
-                    />
-                  )}
-                  {state === 'future' && <ArrowHead x={x2} y={y} dir={dir} color={stroke} />}
-                  {taps.map(({ x: tx, kind }) =>
-                    tapVisible(tx) ? (
-                      <g key={tx} className={`tap tap-${kind}`}>
-                        <circle cx={tx} cy={y} r="8" />
-                        <text x={tx} y={y - 12} textAnchor="middle">
-                          {TAP_LABEL[kind][kid ? 1 : 0]}
-                        </text>
-                      </g>
-                    ) : null,
-                  )}
-                  <text x={(x1 + x2) / 2} y={y + 22} textAnchor="middle" className="msg-label">
-                    {label}
-                  </text>
-                </>
-              )}
-            </g>
-          );
-        })}
-
-        {/* 歩いているパケットキャラ */}
-        {current > 0 &&
-          (() => {
-            const s = steps[current - 1];
-            const x1 = actorX.get(s.from)!;
-            const x2 = actorX.get(s.to)!;
-            const local = s.from === s.to;
-            const dir = local ? selfLoopDir(s.from) : Math.sign(x2 - x1) || 1;
-            const travel = s.lost ? (x2 - x1) / 2 - dir * BUDDY * 0.6 : x2 - x1 - dir * BUDDY * 0.75;
-            const x = local ? x1 + dir * (BUDDY * 0.5 + 44) : x1 + dir * BUDDY * 0.2 + travel * t;
-            const y = local ? rowY(current) - 12 : rowY(current);
-            const flip = local ? dir > 0 : x2 < x1;
-            const hop = tRaw < 1 ? (local ? (1 - t) * 26 : Math.abs(Math.sin(tRaw * Math.PI * 6)) * 6) : 0;
-            const scale = BUDDY / 100;
+      </svg>
+      <div className="diagram-scroll" ref={scrollRef}>
+        <svg
+          viewBox={`0 ${BODY_TOP} ${VB_W} ${height - BODY_TOP}`}
+          className="diagram"
+          role="group"
+          aria-label={`${protocol.name} のシーケンス図（${actors.map((a) => (kid ? a.kidName : splitName(a.name)[0])).join('・')}）`}
+        >
+          {/* フェーズ帯 */}
+          {bands.map((b) => {
+            const phase = phases.find((p) => p.id === b.phaseId);
+            if (!phase) return null;
+            const y1 = rowY(b.from) - LINE_OFFSET + 4;
+            const y2 = rowY(b.to) - LINE_OFFSET + ROW - 4;
+            const reached = current >= b.from;
             return (
-              <g transform={`translate(${x - BUDDY / 2} ${y - BUDDY - 2 - hop})`} pointerEvents="none" opacity={s.lost && tRaw >= 1 ? 0.55 : 1}>
-                <g
-                  className={tRaw >= 1 && !s.lost ? 'buddy-idle' : undefined}
-                  transform={s.lost && tRaw >= 1 ? `rotate(${dir * 80} ${BUDDY / 2} ${BUDDY})` : undefined}
-                >
-                  <g transform={`scale(${scale})${flip ? ' translate(100 0) scale(-1 1)' : ''}`}>
-                    <PacketBuddyShape
-                      color={s.look.color}
-                      accessory={s.look.accessory}
-                      encrypted={s.encrypted}
-                      walking={tRaw < 1}
-                      phase={tRaw * 3}
-                    />
-                  </g>
-                </g>
+              <g key={`${b.phaseId}-${b.from}`} opacity={reached ? 1 : 0.45}>
+                <rect x="8" y={y1} width={VB_W - 16} height={y2 - y1} rx="16" fill={phase.color} fillOpacity="0.16" />
+                <rect x="8" y={y1} width="8" height={y2 - y1} rx="4" fill={phase.color} />
+                {L.compact ? (
+                  <text x="24" y={y1 + 17} className="phase-inline">
+                    {kid ? phase.kidName : phase.name}
+                    {kid && <tspan className="phase-inline-tech"> {phase.name}</tspan>}
+                  </text>
+                ) : (
+                  <foreignObject x="22" y={y1 + 8} width={GUTTER_L - 64} height={y2 - y1 - 12}>
+                    <div className="phase-label">
+                      <span className="phase-kid">{kid ? phase.kidName : phase.name}</span>
+                      {kid && <span className="phase-tech">{phase.name}</span>}
+                    </div>
+                  </foreignObject>
+                )}
               </g>
             );
-          })()}
-      </svg>
+          })}
+
+          {/* 生命線 */}
+          {actors.map((a) => {
+            const x = actorX.get(a.id)!;
+            return (
+              <line
+                key={a.id}
+                x1={x}
+                y1={BODY_TOP}
+                x2={x}
+                y2={height - 20}
+                stroke="#b9b3c7"
+                strokeWidth="3"
+                strokeDasharray="2 9"
+                strokeLinecap="round"
+              />
+            );
+          })}
+
+          {/* メッセージ矢印 */}
+          {steps.map((s, idx) => {
+            const i = idx + 1;
+            const x1 = actorX.get(s.from)!;
+            const x2 = actorX.get(s.to)!;
+            const y = rowY(i);
+            const isCurrent = i === current;
+            const isPast = i < current;
+            const state = isCurrent ? 'current' : isPast ? 'past' : 'future';
+            const phase = phases.find((p) => p.id === s.phase);
+            const stroke = state === 'future' ? '#cfc9da' : s.encrypted ? '#3aa8d8' : (phase?.color ?? '#888');
+            // 消失したパケットは真ん中で止まる
+            const xStop = s.lost ? (x1 + x2) / 2 : x2;
+            const xEnd = isCurrent ? x1 + (xStop - x1) * t : xStop;
+            const dir = Math.sign(x2 - x1) || 1;
+            const label = `${s.danger ? '⚠ ' : ''}${s.encrypted ? '🔒 ' : ''}${s.message}${s.optional ? ' ※' : ''}`;
+            const local = s.from === s.to;
+            const loopDir = selfLoopDir(s.from);
+            // 矢印の途中にいるノードの印: 中継（via）/ ブロードキャストの受信 / 盗み見（gives）
+            const between = (id: string) => {
+              const x = actorX.get(id);
+              return x !== undefined && (x - x1) * (x - x2) < 0;
+            };
+            const tapMap = new Map<string, TapKind>();
+            if (!local) {
+              for (const [id, items] of Object.entries(s.gives ?? {}))
+                if (id !== s.from && id !== s.to && items.length > 0 && between(id)) tapMap.set(id, 'copy');
+              if (s.broadcast) for (const a of actors) if (between(a.id) && !tapMap.has(a.id)) tapMap.set(a.id, 'recv');
+              for (const id of s.via ?? []) if (between(id)) tapMap.set(id, 'relay');
+            }
+            const taps = [...tapMap].map(([id, kind]) => ({ x: actorX.get(id)!, kind }));
+            const tapVisible = (x: number) => isPast || (isCurrent && (xEnd - x) * dir >= 0);
+            return (
+              <g
+                key={s.id}
+                className={`msg msg-${state}`}
+                role="button"
+                tabIndex={0}
+                aria-label={`${i}: ${s.message} — ${kid ? s.kidTitle : s.summary}`}
+                aria-current={isCurrent ? 'step' : undefined}
+                onClick={() => onSelect(i)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelect(i);
+                  }
+                }}
+              >
+                <rect
+                  x={GUTTER_L - 36}
+                  y={y - LINE_OFFSET + 6}
+                  width={VB_W - GUTTER_L - GUTTER_R + 72}
+                  height={ROW - 10}
+                  rx="14"
+                  className="msg-hit"
+                />
+                <circle cx={GUTTER_L - 22} cy={y} r="11" className="msg-num" />
+                <text x={GUTTER_L - 22} y={y + 4.5} textAnchor="middle" className="msg-num-text">
+                  {i}
+                </text>
+                {local ? (
+                  <SelfStep x={x1} y={y} dir={loopDir} state={state} color={stroke} label={label} grow={isCurrent ? t : 1} vbWidth={VB_W} />
+                ) : (
+                  <>
+                    {(isPast || isCurrent) && Math.abs(xEnd - x1) > 4 && (
+                      <line
+                        x1={x1}
+                        y1={y}
+                        x2={(isCurrent && tRaw < 1) || s.lost ? xEnd : xEnd - dir * 8}
+                        y2={y}
+                        stroke={stroke}
+                        strokeWidth={isCurrent ? 5 : 3.5}
+                        strokeLinecap="round"
+                        strokeDasharray={s.optional ? '10 7' : undefined}
+                      />
+                    )}
+                    {(isPast || (isCurrent && tRaw >= 1)) &&
+                      (s.lost ? <LostMark x={xStop} y={y} /> : <ArrowHead x={x2} y={y} dir={dir} color={stroke} />)}
+                    {state === 'future' && (
+                      <line
+                        x1={x1}
+                        y1={y}
+                        x2={x2 - dir * 8}
+                        y2={y}
+                        stroke={stroke}
+                        strokeWidth="2.5"
+                        strokeDasharray="3 8"
+                        strokeLinecap="round"
+                      />
+                    )}
+                    {state === 'future' && <ArrowHead x={x2} y={y} dir={dir} color={stroke} />}
+                    {taps.map(({ x: tx, kind }) =>
+                      tapVisible(tx) ? (
+                        <g key={tx} className={`tap tap-${kind}`}>
+                          <circle cx={tx} cy={y} r="8" />
+                          <text x={tx} y={y - 12} textAnchor="middle">
+                            {TAP_LABEL[kind][kid ? 1 : 0]}
+                          </text>
+                        </g>
+                      ) : null,
+                    )}
+                    <text x={(x1 + x2) / 2} y={y + 22} textAnchor="middle" className="msg-label">
+                      {label}
+                    </text>
+                  </>
+                )}
+              </g>
+            );
+          })}
+
+          {/* 歩いているパケットキャラ */}
+          {current > 0 &&
+            (() => {
+              const s = steps[current - 1];
+              const x1 = actorX.get(s.from)!;
+              const x2 = actorX.get(s.to)!;
+              const local = s.from === s.to;
+              const dir = local ? selfLoopDir(s.from) : Math.sign(x2 - x1) || 1;
+              const travel = s.lost ? (x2 - x1) / 2 - dir * BUDDY * 0.6 : x2 - x1 - dir * BUDDY * 0.75;
+              const x = local ? x1 + dir * (BUDDY * 0.5 + 44) : x1 + dir * BUDDY * 0.2 + travel * t;
+              const y = local ? rowY(current) - 12 : rowY(current);
+              const flip = local ? dir > 0 : x2 < x1;
+              const hop = tRaw < 1 ? (local ? (1 - t) * 26 : Math.abs(Math.sin(tRaw * Math.PI * 6)) * 6) : 0;
+              const scale = BUDDY / 100;
+              return (
+                <g
+                  transform={`translate(${x - BUDDY / 2} ${y - BUDDY - 2 - hop})`}
+                  pointerEvents="none"
+                  opacity={s.lost && tRaw >= 1 ? 0.55 : 1}
+                >
+                  <g
+                    className={tRaw >= 1 && !s.lost ? 'buddy-idle' : undefined}
+                    transform={s.lost && tRaw >= 1 ? `rotate(${dir * 80} ${BUDDY / 2} ${BUDDY})` : undefined}
+                  >
+                    <g transform={`scale(${scale})${flip ? ' translate(100 0) scale(-1 1)' : ''}`}>
+                      <PacketBuddyShape
+                        color={s.look.color}
+                        accessory={s.look.accessory}
+                        encrypted={s.encrypted}
+                        walking={tRaw < 1}
+                        phase={tRaw * 3}
+                      />
+                    </g>
+                  </g>
+                </g>
+              );
+            })()}
+        </svg>
+      </div>
     </div>
   );
 }
