@@ -193,39 +193,41 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
 
   return (
     <div className="diagram-wrap">
-      {/* 登場人物の見出し（スクロールしても常に見える） */}
-      <svg viewBox={`0 0 ${VB_W} ${BODY_TOP}`} className="diagram diagram-head" aria-hidden="true">
-        {actors.map((a) => {
-          const x = actorX.get(a.id)!;
-          const [main, sub] = splitName(a.name);
-          const title = kid ? a.kidName : main;
-          const caption = kid ? main : sub;
-          return (
-            <g key={a.id}>
-              <line
-                x1={x}
-                y1={HEADER - 14}
-                x2={x}
-                y2={BODY_TOP}
-                stroke="#b9b3c7"
-                strokeWidth="3"
-                strokeDasharray="2 9"
-                strokeLinecap="round"
-              />
-              <g transform={`translate(${x - 50 * actorScale} 6) scale(${actorScale})`}>
-                <ActorIconShape kind={a.icon} />
-              </g>
-              <text x={x} y={100 * actorScale + 26} textAnchor="middle" className={many ? 'actor-kid actor-many' : 'actor-kid'}>
-                {title}
-              </text>
-              <text x={x} y={100 * actorScale + 42} textAnchor="middle" className={many ? 'actor-tech actor-many' : 'actor-tech'}>
-                {caption}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
       <div className="diagram-scroll" ref={scrollRef}>
+        {/* 登場人物の見出し: スクロール領域の中で sticky にして、本体と同じ幅（スクロールバーを除いた幅）で描く */}
+        <div className="diagram-head">
+          <svg viewBox={`0 0 ${VB_W} ${BODY_TOP}`} className="diagram" aria-hidden="true">
+            {actors.map((a) => {
+              const x = actorX.get(a.id)!;
+              const [main, sub] = splitName(a.name);
+              const title = kid ? a.kidName : main;
+              const caption = kid ? main : sub;
+              return (
+                <g key={a.id}>
+                  <line
+                    x1={x}
+                    y1={HEADER - 14}
+                    x2={x}
+                    y2={BODY_TOP}
+                    stroke="#b9b3c7"
+                    strokeWidth="3"
+                    strokeDasharray="2 9"
+                    strokeLinecap="round"
+                  />
+                  <g transform={`translate(${x - 50 * actorScale} 6) scale(${actorScale})`}>
+                    <ActorIconShape kind={a.icon} />
+                  </g>
+                  <text x={x} y={100 * actorScale + 26} textAnchor="middle" className={many ? 'actor-kid actor-many' : 'actor-kid'}>
+                    {title}
+                  </text>
+                  <text x={x} y={100 * actorScale + 42} textAnchor="middle" className={many ? 'actor-tech actor-many' : 'actor-tech'}>
+                    {caption}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
         <svg
           viewBox={`0 ${BODY_TOP} ${VB_W} ${height - BODY_TOP}`}
           className="diagram"

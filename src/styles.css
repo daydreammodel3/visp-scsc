@@ -260,14 +260,15 @@ button {
   overflow: hidden;
 }
 .diagram-head {
-  position: relative;
-  z-index: 1;
+  position: sticky;
+  top: 0;
+  z-index: 2;
   background: var(--panel);
   box-shadow: 0 6px 8px -6px rgba(45, 42, 50, 0.18);
 }
 .diagram-scroll {
-  max-height: calc(100vh - 330px);
-  min-height: 260px;
+  max-height: calc(100vh - 200px);
+  min-height: 360px;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -775,6 +776,7 @@ button {
 .speed button {
   padding: 4px 10px;
   font-size: 0.8rem;
+  white-space: nowrap;
 }
 
 /* スマホ・タブレット */
@@ -800,7 +802,7 @@ button {
     position: static;
   }
   .diagram-scroll {
-    max-height: 46vh;
+    max-height: 56vh;
     min-height: 0;
   }
 }
@@ -1165,7 +1167,7 @@ button {
   align-items: start;
 }
 .compare-side .diagram-scroll {
-  max-height: calc(100vh - 390px);
+  max-height: calc(100vh - 260px);
 }
 .compare-head {
   display: flex;
