@@ -4,6 +4,7 @@ import { C, P } from './colors';
 export const ping: Protocol = {
   id: 'ping',
   name: 'ping (ICMP)',
+  level: 1,
   tagline: 'ICMP Echo で相手に届くかと往復時間を確かめる',
   kidTagline: '「とどいてる？」「とどいてるよ！」で つながりを たしかめる',
   layer: 'IP の上（IP プロトコル番号 1）',

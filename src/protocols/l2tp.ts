@@ -25,6 +25,7 @@ function zlb(id: string, phase: string, ns: number, nr: number, ackOf: string): 
 export const l2tp: Protocol = {
   id: 'l2tp',
   name: 'L2TP (v2)',
+  level: 3,
   tagline: 'PPP を UDP でトンネリングする L2TPv2',
   kidTagline: 'PPP を インターネットごしに はこぶ トンネル',
   layer: 'UDP 1701 の上（多くは IPsec で保護: L2TP/IPsec）',

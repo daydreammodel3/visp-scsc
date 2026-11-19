@@ -4,6 +4,7 @@ import { C, P } from './colors';
 export const tls13: Protocol = {
   id: 'tls13',
   name: 'TLS 1.3',
+  level: 2,
   tagline: '1-RTT で暗号化を始める現行版（RFC 8446）',
   kidTagline: 'いまの Web の「かぎつき通信」。はやくて あんぜん',
   layer: 'TCP の上（HTTPS など）',

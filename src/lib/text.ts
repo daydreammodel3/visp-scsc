@@ -71,6 +71,13 @@ export const UI = {
   },
 } as const;
 
+/** 難しさの表示。[大人向け, こども向け] */
+export const LEVEL_LABEL: Record<1 | 2 | 3, [string, string]> = {
+  1: ['入門', '★ やさしい'],
+  2: ['中級', '★★ ちょっと むずかしい'],
+  3: ['上級', '★★★ とっても むずかしい'],
+};
+
 export function loadMode(): Mode {
   try {
     const v = localStorage.getItem('audience');

@@ -161,9 +161,13 @@ export interface Step {
   rfc?: RfcRef[];
 }
 
+/** 難しさ: 1 = 入門（こどもでも楽しめる）, 2 = 中級, 3 = 上級 */
+export type Level = 1 | 2 | 3;
+
 export interface Protocol {
   id: string;
   name: string;
+  level: Level;
   /** 一覧に出す短いサブタイトル（大人向け） */
   tagline: string;
   /** 一覧に出す短いサブタイトル（こども向け） */

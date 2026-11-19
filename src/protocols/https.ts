@@ -4,6 +4,7 @@ import { C, P } from './colors';
 export const https: Protocol = {
   id: 'https',
   name: 'HTTPS',
+  level: 1,
   tagline: 'HTTP を TLS で守る。リダイレクト・SNI と ALPN・証明書の検証・HSTS',
   kidTagline: 'ホームページを かぎつきで みる しくみ',
   layer: 'HTTP over TLS（TCP 443 番）',

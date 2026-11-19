@@ -5,6 +5,7 @@ import { cryptoActors } from './cryptoActors';
 export const dh: Protocol = {
   id: 'dh',
   name: 'Diffie-Hellman 鍵交換',
+  level: 1,
   tagline: '秘密の値を送らずに、盗聴者に知られない共通鍵を作る',
   kidTagline: 'えのぐを まぜて、ふたりだけの いろを つくる',
   layer: '暗号の基本（TLS 1.3・IKEv2 の鍵交換の土台）',

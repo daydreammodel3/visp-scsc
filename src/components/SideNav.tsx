@@ -1,6 +1,7 @@
 import type { Category } from '../protocols/types';
 import type { ComparePreset } from '../protocols/compare';
-import type { Mode } from '../lib/text';
+import { LEVEL_LABEL, type Mode } from '../lib/text';
+import { findProtocol } from '../protocols';
 
 interface Props {
   id: string;
@@ -15,6 +16,17 @@ interface Props {
   /** スマホのドロワー表示のときだけ渡す（閉じるボタンを出す） */
   onClose?: () => void;
   closeLabel?: string;
+}
+
+/** 比較の難しさは、左右のうち難しいほう */
+function presetLevel(c: ComparePreset): 1 | 2 | 3 {
+  return Math.max(findProtocol(c.left)?.level ?? 1, findProtocol(c.right)?.level ?? 1) as 1 | 2 | 3;
+}
+
+function LevelTag({ level, kid }: { level: 1 | 2 | 3; kid: boolean }) {
+  // 大人向けでは入門は表示しない（多すぎると目立たないため）
+  if (!kid && level === 1) return null;
+  return <span className={`nav-level level-${level}`}>{kid ? LEVEL_LABEL[level][1] : LEVEL_LABEL[level][0]}</span>;
 }
 
 /** 左側のプロトコルメニュー */
@@ -55,6 +67,7 @@ export function SideNav({
                   >
                     <span className="nav-name">{p.name}</span>
                     <span className="nav-tag">{kid ? p.kidTagline : p.tagline}</span>
+                    <LevelTag level={p.level} kid={kid} />
                   </button>
                 </li>
               );
@@ -77,6 +90,7 @@ export function SideNav({
                 >
                   <span className="nav-name">{kid ? c.kidName : c.name}</span>
                   <span className="nav-tag">{kid ? c.kidTagline : c.tagline}</span>
+                  <LevelTag level={presetLevel(c)} kid={kid} />
                 </button>
               </li>
             );

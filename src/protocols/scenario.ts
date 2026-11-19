@@ -4,6 +4,7 @@ import { C, P } from './colors';
 export const webScenario: Protocol = {
   id: 'web',
   name: 'Web ページが表示されるまで',
+  level: 1,
   tagline: 'DHCP → ARP → DNS → TCP → TLS → HTTP を 1 本の流れでたどる',
   kidTagline: 'パソコンを つないでから ホームページが みえるまで',
   layer: '通しシナリオ（複数のプロトコルの組み合わせ）',

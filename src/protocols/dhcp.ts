@@ -4,6 +4,7 @@ import { C, P } from './colors';
 export const dhcp: Protocol = {
   id: 'dhcp',
   name: 'DHCP',
+  level: 1,
   tagline: 'IP アドレスなどのネットワーク設定を自動で受け取る（DORA）',
   kidTagline: 'ネットワークに はいったら じゅうしょを もらおう',
   layer: 'UDP の上（クライアント 68 番 ⇔ サーバー 67 番）',

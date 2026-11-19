@@ -5,6 +5,7 @@ import { H2_H3_STACKS } from './transportStacks';
 export const quic: Protocol = {
   id: 'quic',
   name: 'QUIC（なぜ安全か）',
+  level: 3,
   tagline: 'UDP 上で TLS 1.3 を一体化。1-RTT で接続し、ヘッダーの大部分まで暗号化・認証する',
   kidTagline: 'でんわと かぎを いっぺんに。ふうとうの おもても かぎつき',
   layer: 'UDP の上のトランスポート（TLS 1.3 を内蔵）。その上で HTTP/3',

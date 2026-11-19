@@ -34,8 +34,14 @@ function Side({ protocol, step, mode, travelMs, onSelect, onOpen }: { protocol: 
               {cur} / {protocol.steps.length}
               {done && step > protocol.steps.length ? (kid ? '（おわり）' : '（完了）') : ''}
             </span>
-            <b>{s.message}</b>
-            <span>{kid ? s.kidTitle : s.summary}</span>
+            {kid ? (
+              <b>{s.kidTitle}</b>
+            ) : (
+              <>
+                <b>{s.message}</b>
+                <span>{s.summary}</span>
+              </>
+            )}
           </>
         ) : (
           <span>{kid ? '「すすむ」で スタート' : '「進む」で開始'}</span>
@@ -73,7 +79,8 @@ export function CompareView(props: Props) {
               </tr>
             </thead>
             <tbody>
-              {preset.rows?.map((r) => (
+              {/* 行の値は大人向けの言葉なので、こども向けでは出さない */}
+              {(kid ? [] : (preset.rows ?? [])).map((r) => (
                 <tr key={r.label}>
                   <th scope="row">{kid ? r.kidLabel : r.label}</th>
                   <td>{r.left}</td>

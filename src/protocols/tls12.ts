@@ -4,6 +4,7 @@ import { C, P } from './colors';
 export const tls12: Protocol = {
   id: 'tls12',
   name: 'TLS 1.2',
+  level: 2,
   tagline: '2-RTT のフルハンドシェイク（RFC 5246）',
   kidTagline: 'Webの「かぎつき通信」のちょっと前の世代',
   layer: 'TCP の上（HTTPS など）',

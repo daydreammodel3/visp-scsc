@@ -5,6 +5,7 @@ import { H2_H3_STACKS } from './transportStacks';
 export const tcpTls: Protocol = {
   id: 'tcp-tls',
   name: 'TCP ＋ TLS 1.3（HTTP/2 の土台）',
+  level: 2,
   tagline: 'リクエストまで 2-RTT。TLS で中身は守れるが、TCP ヘッダーは最後まで平文',
   kidTagline: 'でんわを つないでから かぎを つくる。ふうとうの おもては まるみえ',
   layer: 'TCP（トランスポート）の上に TLS 1.3。その上で HTTP/2',

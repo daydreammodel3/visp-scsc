@@ -5,6 +5,7 @@ import { cryptoActors } from './cryptoActors';
 export const rsaKex: Protocol = {
   id: 'rsa-kex',
   name: '公開鍵暗号で鍵を送る (RSA)',
+  level: 1,
   tagline: '受信者の公開鍵で共通鍵を暗号化して届ける（RSA 鍵輸送）',
   kidTagline: 'だれでも しめられる 南京錠で かぎを おくる',
   layer: '暗号の基本（TLS 1.2 の RSA 鍵交換の土台）',

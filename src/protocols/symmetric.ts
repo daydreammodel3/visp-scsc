@@ -5,6 +5,7 @@ import { cryptoActors } from './cryptoActors';
 export const symmetric: Protocol = {
   id: 'symmetric',
   name: '共通鍵暗号と鍵配送問題',
+  level: 1,
   tagline: '同じ鍵で暗号化・復号する方式と、その鍵をどう渡すかという問題',
   kidTagline: 'おなじ かぎで しめて あける。でも かぎを どう わたす？',
   layer: '暗号の基本（TLS・IPsec のデータ暗号化の土台）',

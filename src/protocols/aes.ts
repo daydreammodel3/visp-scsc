@@ -16,6 +16,7 @@ const hx = (b: number[]) => toHex(b, ' ');
 export const aes: Protocol = {
   id: 'aes',
   name: 'AES（共通鍵暗号）',
+  level: 3,
   tagline: 'いま標準の共通鍵ブロック暗号。4 つの処理を 10 ラウンド繰り返す',
   kidTagline: 'もじを おきかえて、ずらして、まぜて、かぎを かさねる',
   layer: '暗号アルゴリズム（TLS・IPsec・SSH・Wi-Fi のデータ暗号化）',

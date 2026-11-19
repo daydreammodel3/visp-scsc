@@ -8,6 +8,7 @@ const wa = (label: string, anchor: string) => ({ label: `WebAuthn: ${label}`, ur
 export const passkey: Protocol = {
   id: 'passkey',
   name: 'パスキー（WebAuthn / FIDO2）',
+  level: 1,
   tagline: 'パスワードの代わりに、端末内の秘密鍵で毎回ちがうチャレンジに署名してログインする',
   kidTagline: 'パスワードなしで、ゆびや かおで ログイン',
   layer: 'Web の認証（ブラウザの WebAuthn API。通信は HTTPS の上）',

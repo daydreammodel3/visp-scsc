@@ -15,6 +15,7 @@ const h = (v: bigint) => hex(v, 64);
 export const tdes: Protocol = {
   id: '3des',
   name: '3DES（トリプル DES）',
+  level: 2,
   tagline: 'DES を 3 回（暗号化・復号・暗号化）重ねて鍵を長くした延命策',
   kidTagline: 'DES を 3かい かさねて つよくした',
   layer: '暗号アルゴリズム（2023 年末で新規の暗号化には使用不可）',

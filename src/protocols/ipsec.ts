@@ -4,6 +4,7 @@ import { C, P } from './colors';
 export const ipsec: Protocol = {
   id: 'ipsec',
   name: 'IPsec (IKEv2 + ESP)',
+  level: 3,
   tagline: 'IKEv2 の鍵交換と ESP トンネル',
   kidTagline: 'ネットワークどうしを つなぐ ひみつのトンネル',
   layer: 'IP 層（IKE は UDP 500/4500、ESP は IP プロトコル 50）',

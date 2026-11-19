@@ -4,6 +4,7 @@ import { C, P } from './colors';
 export const arp: Protocol = {
   id: 'arp',
   name: 'ARP',
+  level: 1,
   tagline: 'IP アドレスから同じ LAN 内の MAC アドレスを調べる',
   kidTagline: '「この じゅうしょの人 だれ？」と よびかけて へやばんごうを しる',
   layer: 'イーサネット上（EtherType 0x0806）。IP の下で動く',

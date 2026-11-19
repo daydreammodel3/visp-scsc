@@ -17,6 +17,7 @@ const CT = hex(T.output, 64);
 export const des: Protocol = {
   id: 'des',
   name: 'DES（共通鍵暗号）',
+  level: 3,
   tagline: '1977 年の標準暗号。Feistel 構造を 16 段。56 ビット鍵は今では総当たりで破れる',
   kidTagline: 'はんぶんに わけて こうたいで まぜる、むかしの あんごう',
   layer: '暗号アルゴリズム（歴史的。現在は使用禁止）',

@@ -46,6 +46,8 @@ export function VizView({ viz, kid }: { viz: Viz; kid: boolean }) {
     );
   }
   if (viz.kind === 'stacks') {
+    // 層の図は大人向けの言葉で書いているので、こども向けでは出さない（下の やさしい 説明で伝える）
+    if (kid) return null;
     return (
       <figure className="viz">
         <div className="viz-stacks">

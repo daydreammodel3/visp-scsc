@@ -4,6 +4,7 @@ import { C, P } from './colors';
 export const ssh: Protocol = {
   id: 'ssh',
   name: 'SSH',
+  level: 2,
   tagline: '遠くのサーバーに安全にログインする（SSH-2）',
   kidTagline: 'とおくの コンピューターを かぎつきの でんわで そうさする',
   layer: 'TCP の上（22 番）',

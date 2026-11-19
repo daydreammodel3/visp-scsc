@@ -1,7 +1,7 @@
 import type { Protocol } from '../protocols/types';
 import { PacketBuddy } from './PacketBuddy';
 import { rfcLabel, rfcUrl } from '../lib/rfc';
-import { UI, type Mode } from '../lib/text';
+import { LEVEL_LABEL, UI, type Mode } from '../lib/text';
 import { KeyInventory } from './KeyInventory';
 import { VizView } from './VizView';
 import { InsightPanel } from './InsightPanel';
@@ -56,10 +56,10 @@ export function StepDetail({ protocol, current, mode, onNavigate }: Props) {
         />
         {kid ? (
           <div className="bubble">
-            <p className="bubble-name">
-              ぼくは <b>{step.message}</b>
-            </p>
             <p className="bubble-title">{step.kidTitle}</p>
+            <p className="bubble-name bubble-realname">
+              ほんとうの なまえ：<span>{step.message}</span>
+            </p>
           </div>
         ) : (
           <div className="bubble bubble-adult">
@@ -167,6 +167,10 @@ function Intro({ protocol, mode }: { protocol: Protocol; mode: Mode }) {
           <p className="bubble-name">{ui.introStart}</p>
         </div>
       </div>
+      <p className={`level-badge level-${protocol.level}`}>
+        {kid ? LEVEL_LABEL[protocol.level][1] : `難しさ: ${LEVEL_LABEL[protocol.level][0]}`}
+        {kid && protocol.level >= 2 && <small> おとなの ひとと いっしょに みてね</small>}
+      </p>
       <p className={kid ? 'kid-text' : 'pro-text'}>{kid ? protocol.kidIntro : protocol.intro}</p>
       {protocol.introViz && <VizView viz={protocol.introViz} kid={kid} />}
 

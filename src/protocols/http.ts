@@ -4,6 +4,7 @@ import { C, P } from './colors';
 export const http: Protocol = {
   id: 'http',
   name: 'HTTP/1.1',
+  level: 1,
   tagline: 'リクエストとレスポンスで Web ページを取得する（持続的接続とキャッシュ）',
   kidTagline: '「この ページ ください」「はい どうぞ」',
   layer: 'TCP（HTTPS では TLS）の上。HTTP/3 は QUIC の上',

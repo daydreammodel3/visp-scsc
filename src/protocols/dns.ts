@@ -4,6 +4,7 @@ import { C, P } from './colors';
 export const dns: Protocol = {
   id: 'dns',
   name: 'DNS',
+  level: 1,
   tagline: 'ドメイン名から IP アドレスを調べる（反復問い合わせとキャッシュ）',
   kidTagline: 'なまえから じゅうしょを しらべる でんわちょう',
   layer: 'UDP / TCP の上（53 番）',

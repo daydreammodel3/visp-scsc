@@ -4,6 +4,7 @@ import { C, P } from './colors';
 export const tcp: Protocol = {
   id: 'tcp',
   name: 'TCP',
+  level: 1,
   tagline: '3 ウェイハンドシェイク・確認応答と再送・4 ウェイの切断',
   kidTagline: '「もしもし」「はい」「よろしく」で でんわを つなぐ',
   layer: 'IP の上（トランスポート層）。TLS・SSH・HTTP/1.1・HTTP/2 はこの上で動く',

@@ -84,6 +84,14 @@ function ArrowHead({ x, y, dir, color }: { x: number; y: number; dir: number; co
   return <path d={`M${x} ${y} L${x - dir * 13} ${y - 7.5} L${x - dir * 13} ${y + 7.5} Z`} fill={color} strokeLinejoin="round" />;
 }
 
+/** いちばん真ん中に近い空白で 2 行に分ける。空白がなければ分けない */
+function splitInTwo(text: string): [string, string] | undefined {
+  const mid = text.length / 2;
+  let best = -1;
+  for (let i = 0; i < text.length; i++) if (text[i] === ' ' && (best < 0 || Math.abs(i - mid) < Math.abs(best - mid))) best = i;
+  return best > 0 ? [text.slice(0, best), text.slice(best + 1)] : undefined;
+}
+
 /** 全角は 1em、半角は 0.6em としたおおよその文字幅 */
 function estimateWidth(text: string, fontSize: number): number {
   let em = 0;
@@ -321,7 +329,13 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
             const xStop = s.lost ? (x1 + x2) / 2 : x2;
             const xEnd = isCurrent ? x1 + (xStop - x1) * t : xStop;
             const dir = Math.sign(x2 - x1) || 1;
-            const label = `${s.danger ? '⚠ ' : ''}${s.encrypted ? '🔒 ' : ''}${s.message}${s.optional ? ' ※' : ''}`;
+            // こども向けでは技術名の代わりに、ひとことのやさしい言葉を矢印に書く
+            const label = `${s.danger ? '⚠ ' : ''}${s.encrypted ? '🔒 ' : ''}${kid ? s.kidTitle : s.message}${s.optional ? ' ※' : ''}`;
+            const labelX = (x1 + x2) / 2;
+            const labelRoom = 2 * Math.min(labelX, VB_W - labelX) - 12;
+            const fitLabel = estimateWidth(label, 15) > labelRoom ? labelRoom : undefined;
+            // 縮めすぎると読めないので、幅が大きく足りないときは空白で 2 行に分ける
+            const twoLines = fitLabel && estimateWidth(label, 15) > labelRoom * 1.25 ? splitInTwo(label) : undefined;
             const local = s.from === s.to;
             const loopDir = selfLoopDir(s.from);
             // 矢印の途中にいるノードの印: 中継（via）/ ブロードキャストの受信 / 盗み見（gives）
@@ -407,9 +421,35 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
                         </g>
                       ) : null,
                     )}
-                    <text x={(x1 + x2) / 2} y={y + 22} textAnchor="middle" className="msg-label">
-                      {label}
-                    </text>
+                    {twoLines ? (
+                      <text x={labelX} y={y + 19} textAnchor="middle" className="msg-label msg-label-2">
+                        {twoLines.map((ln, k) => {
+                          const fit = estimateWidth(ln, 13) > labelRoom ? labelRoom : undefined;
+                          return (
+                            <tspan
+                              key={k}
+                              x={labelX}
+                              dy={k === 0 ? 0 : 16}
+                              textLength={fit}
+                              lengthAdjust={fit ? 'spacingAndGlyphs' : undefined}
+                            >
+                              {ln}
+                            </tspan>
+                          );
+                        })}
+                      </text>
+                    ) : (
+                      <text
+                        x={labelX}
+                        y={y + 22}
+                        textAnchor="middle"
+                        className="msg-label"
+                        textLength={fitLabel}
+                        lengthAdjust={fitLabel ? 'spacingAndGlyphs' : undefined}
+                      >
+                        {label}
+                      </text>
+                    )}
                   </>
                 )}
               </g>

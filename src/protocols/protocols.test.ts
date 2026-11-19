@@ -417,3 +417,13 @@ describe('パスキーと QUIC のセキュリティ', () => {
       }
   });
 });
+
+describe('難しさ', () => {
+  it('すべてのレッスンに 1〜3 の難しさがある', () => {
+    for (const p of protocols) expect([1, 2, 3], p.id).toContain(p.level);
+  });
+  it('入門（こどもでも楽しめる）レッスンが各カテゴリの入口に用意されている', () => {
+    const easy = protocols.filter((p) => p.level === 1).map((p) => p.id);
+    expect(easy).toEqual(expect.arrayContaining(['web', 'symmetric', 'dh', 'dhcp', 'dns', 'tcp', 'http', 'https', 'passkey']));
+  });
+});

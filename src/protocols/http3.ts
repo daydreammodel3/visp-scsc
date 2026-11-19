@@ -5,6 +5,7 @@ import { H2_H3_STACKS } from './transportStacks';
 export const http3: Protocol = {
   id: 'http3',
   name: 'HTTP/3（QUIC）',
+  level: 3,
   tagline: 'UDP 上の QUIC で、TLS 込み 1 往復で接続。パケット消失で他のストリームが止まらない',
   kidTagline: 'でんわを つなぐのと かぎを つくるのを いっぺんに',
   layer: 'QUIC（UDP 443 番）の上。TLS 1.3 は QUIC に組み込まれている',

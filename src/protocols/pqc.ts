@@ -12,6 +12,7 @@ const HALF = Math.floor(Q / 2);
 export const pqc: Protocol = {
   id: 'pqc',
   name: '耐量子暗号（ML-KEM）',
+  level: 3,
   tagline: '量子コンピューターでも破れない鍵共有。格子問題にもとづく ML-KEM（旧 Kyber）',
   kidTagline: 'みらいの コンピューターにも まけない かぎの わたしかた',
   layer: '暗号アルゴリズム（TLS 1.3 のハイブリッド鍵交換などで導入が進行中）',

@@ -4,6 +4,7 @@ import { C, P } from './colors';
 export const http2: Protocol = {
   id: 'http2',
   name: 'HTTP/2',
+  level: 2,
   tagline: '1 本の接続でリクエストを並行に流す（バイナリフレームと多重化）',
   kidTagline: '1ぽんの でんわで いくつもの おねがいを いっぺんに',
   layer: 'TLS（ALPN "h2"）＋ TCP の上',
