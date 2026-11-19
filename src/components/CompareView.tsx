@@ -3,6 +3,7 @@ import { metrics, presetProtocols } from '../protocols/compare';
 import type { Protocol } from '../protocols/types';
 import type { Mode } from '../lib/text';
 import { SequenceDiagram } from './SequenceDiagram';
+import { VizView } from './VizView';
 
 interface Props {
   preset: ComparePreset;
@@ -61,6 +62,7 @@ export function CompareView(props: Props) {
       <section className="panel compare-notes">
         <h2>{kid ? preset.kidName : preset.name}</h2>
         <p className="compare-tag">{kid ? preset.kidTagline : preset.tagline}</p>
+        {preset.viz && <VizView viz={preset.viz} kid={kid} />}
         <div className="compare-table-wrap">
           <table className="fields compare-table">
             <thead>

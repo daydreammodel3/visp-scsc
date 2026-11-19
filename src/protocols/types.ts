@@ -18,7 +18,7 @@ export type Accessory =
   | 'ticket' // 次回用のチケット
   | 'moon'; // おしまい・切断
 
-export type ActorIcon = 'laptop' | 'server' | 'router' | 'eve';
+export type ActorIcon = 'laptop' | 'server' | 'router' | 'eve' | 'authenticator';
 
 export interface Actor {
   id: string;
@@ -73,7 +73,34 @@ export type Viz =
       /** DES の左右半分・ビット列など。hl は強調 */
       rows: { label: string; value: string; hl?: boolean }[];
       caption?: string;
+    }
+  | {
+      kind: 'stacks';
+      /** プロトコルスタックを左右に並べる（上が上位層）。hl の層を強調 */
+      stacks: { title: string; layers: { label: string; note?: string; hl?: boolean }[] }[];
+      caption?: string;
     };
+
+/** ステップにならない解説（「なぜ安全か」「トレードオフ」など）の 1 項目 */
+export interface Insight {
+  title: string;
+  body: string;
+  /** 比較対象（「パスワード：…」など） */
+  vs?: string;
+  /** コマンド例など等幅で見せたいもの */
+  code?: string;
+  kidTitle?: string;
+  kidBody?: string;
+  kidVs?: string;
+}
+
+/** 解説のまとまり。kidHeading がないグループはこども向けモードでは表示しない */
+export interface InsightGroup {
+  id: string;
+  heading: string;
+  kidHeading?: string;
+  items: Insight[];
+}
 
 export interface DocRef {
   label: string;
@@ -146,6 +173,10 @@ export interface Protocol {
   rfcs: { rfc: number; title: string }[];
   /** RFC 以外の規格（FIPS など） */
   standards?: (DocRef & { title: string })[];
+  /** 紹介画面に出す図（プロトコルスタックなど） */
+  introViz?: Viz;
+  /** 紹介画面と最後のステップに出す解説（なぜ安全か・トレードオフなど） */
+  insights?: InsightGroup[];
   kidIntro: string;
   intro: string;
   actors: Actor[];

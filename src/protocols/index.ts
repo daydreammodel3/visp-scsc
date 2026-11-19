@@ -21,6 +21,9 @@ import { webScenario } from './scenario';
 import { https } from './https';
 import { http2 } from './http2';
 import { http3 } from './http3';
+import { passkey } from './passkey';
+import { tcpTls } from './tcpTls';
+import { quic } from './quic';
 
 /**
  * 左メニューに並ぶカテゴリと、その中のプロトコル。
@@ -32,7 +35,8 @@ export const categories: Category[] = [
   { id: 'cipher', name: '暗号アルゴリズム', kidName: 'あんごうの しくみ', protocols: [des, tdes, aes, pqc] },
   { id: 'basic', name: 'ネットワークの基本', kidName: 'ネットワークの きほん', protocols: [dhcp, arp, ping, dns, tcp] },
   { id: 'web', name: 'Web（HTTP）', kidName: 'ホームページの しくみ', protocols: [http, https, http2, http3] },
-  { id: 'secure', name: 'セキュア通信', kidName: 'ひみつの つうしん', protocols: [tls12, tls13, ssh] },
+  { id: 'secure', name: 'セキュア通信', kidName: 'ひみつの つうしん', protocols: [tls12, tls13, ssh, tcpTls, quic] },
+  { id: 'auth', name: '認証', kidName: 'ほんにん かくにん', protocols: [passkey] },
   { id: 'vpn', name: 'VPN・トンネル', kidName: 'トンネル', protocols: [ipsec, l2tp] },
 ];
 

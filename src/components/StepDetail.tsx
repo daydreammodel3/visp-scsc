@@ -4,6 +4,7 @@ import { rfcLabel, rfcUrl } from '../lib/rfc';
 import { UI, type Mode } from '../lib/text';
 import { KeyInventory } from './KeyInventory';
 import { VizView } from './VizView';
+import { InsightPanel } from './InsightPanel';
 import { statesAt } from '../lib/nodeStates';
 import { findProtocol } from '../protocols';
 
@@ -130,6 +131,7 @@ export function StepDetail({ protocol, current, mode, onNavigate }: Props) {
       )}
       {step.see && onNavigate && <SeeLink see={step.see} kid={kid} onNavigate={onNavigate} />}
       <KeyInventory protocol={protocol} current={current} mode={mode} />
+      {current === protocol.steps.length && <InsightPanel groups={protocol.insights} mode={mode} />}
     </article>
   );
 }
@@ -166,6 +168,7 @@ function Intro({ protocol, mode }: { protocol: Protocol; mode: Mode }) {
         </div>
       </div>
       <p className={kid ? 'kid-text' : 'pro-text'}>{kid ? protocol.kidIntro : protocol.intro}</p>
+      {protocol.introViz && <VizView viz={protocol.introViz} kid={kid} />}
 
       <dl className="intro-meta">
         <dt>{ui.nodes}</dt>
@@ -213,6 +216,7 @@ function Intro({ protocol, mode }: { protocol: Protocol; mode: Mode }) {
       </div>
       <NodeStates protocol={protocol} current={0} kid={kid} />
       <KeyInventory protocol={protocol} current={0} mode={mode} />
+      <InsightPanel groups={protocol.insights} mode={mode} />
     </article>
   );
 }

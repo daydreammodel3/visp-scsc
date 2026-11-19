@@ -45,6 +45,26 @@ export function VizView({ viz, kid }: { viz: Viz; kid: boolean }) {
       </figure>
     );
   }
+  if (viz.kind === 'stacks') {
+    return (
+      <figure className="viz">
+        <div className="viz-stacks">
+          {viz.stacks.map((st) => (
+            <div key={st.title} className="viz-stack">
+              <span className="viz-stack-title">{st.title}</span>
+              {st.layers.map((l) => (
+                <span key={l.label} className={l.hl ? 'viz-layer hl' : 'viz-layer'}>
+                  <b>{l.label}</b>
+                  {l.note && <small>{l.note}</small>}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+        {viz.caption && <figcaption>{viz.caption}</figcaption>}
+      </figure>
+    );
+  }
   return (
     <figure className="viz">
       <dl className="viz-rows">

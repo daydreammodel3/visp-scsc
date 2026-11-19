@@ -1211,3 +1211,94 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+/* プロトコルスタックの図 */
+.viz-stacks {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.viz-stack {
+  flex: 1 1 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.viz-stack-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: center;
+}
+.viz-layer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: #fff;
+  border: 2px solid #e2d9ca;
+  border-radius: 8px;
+  padding: 4px 6px;
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+.viz-layer small {
+  font-size: 0.68rem;
+  color: var(--ink-soft);
+}
+.viz-layer.hl {
+  background: #ffe9cc;
+  border-color: var(--accent);
+}
+
+/* なぜ安全か・トレードオフなどの解説 */
+.insights {
+  margin-top: 16px;
+  border-top: 2px dashed var(--line);
+  padding-top: 12px;
+  display: grid;
+  gap: 14px;
+}
+.insight-group h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+.insight-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+}
+.insight {
+  background: #faf6ef;
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-width: 0;
+}
+.insight h4 {
+  margin: 0 0 4px;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+.insight p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+.insight-vs {
+  margin-top: 6px !important;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-soft);
+}
+.insight-code {
+  display: block;
+  margin-top: 6px;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  background: #2d2a32;
+  color: #fff8ec;
+  border-radius: 6px;
+  padding: 4px 8px;
+  overflow-wrap: anywhere;
+}

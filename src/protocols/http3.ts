@@ -1,5 +1,6 @@
 import type { Protocol } from './types';
 import { C, P } from './colors';
+import { H2_H3_STACKS } from './transportStacks';
 
 export const http3: Protocol = {
   id: 'http3',
@@ -20,6 +21,40 @@ export const http3: Protocol = {
     'HTTP/3 は、TCP の かわりに QUIC（クイック）という あたらしい はこびかたを つかうよ。でんわを つなぐのと かぎを つくるのを いっぺんに やるから はやいんだ。それに、とちゅうで カードが 1まい なくなっても、ほかの おねがいは とまらない。Wi-Fi から スマホの でんぱに きりかわっても、おはなしが つづくよ。',
   intro:
     'QUIC は UDP の上に作られたトランスポートプロトコルで、TLS 1.3 のハンドシェイクを内部に取り込み、接続確立と暗号化を合わせて 1 往復で行う。ストリームはトランスポート層で独立しているので、あるストリームのパケットが失われても他のストリームの受け渡しは止まらない。接続はコネクション ID で識別されるため、IP アドレスやポートが変わっても接続を引き継げる（コネクションマイグレーション）。HTTP/3 はこの QUIC の上で HTTP のセマンティクスを実現し、ヘッダー圧縮には QPACK を使う。ブラウザは Alt-Svc ヘッダーや DNS の HTTPS レコードで、サーバーが HTTP/3 に対応していることを知る。',
+  introViz: H2_H3_STACKS,
+  insights: [
+    {
+      id: 'key',
+      heading: '最重要ポイント',
+      kidHeading: 'いちばん だいじな こと',
+      items: [
+        {
+          title: '速度は HTTP、セキュリティは 1 段下',
+          body: 'HTTP/2 → HTTP/3 の違いは主に「速度」。セキュリティの違いは、その下の「TCP＋TLS → QUIC」から来る。なぜ安全になったかは、レッスン「QUIC（なぜ安全か）」と比較「TCP＋TLS と QUIC」で見る。',
+          kidTitle: 'はやさは HTTP、あんぜんは その した',
+          kidBody: 'HTTP/3 で はやく なった。あんぜんに なった りゆうは、その したの QUIC に あるよ。',
+        },
+      ],
+    },
+    {
+      id: 'gens',
+      heading: 'HTTP の 3 世代',
+      items: [
+        {
+          title: 'HTTP/1.1',
+          body: 'テキスト。1 接続で 1 リクエストずつ。下の層は TCP（＋任意で TLS）。並列化には接続を複数張る。',
+        },
+        {
+          title: 'HTTP/2',
+          body: 'バイナリ。1 接続上でストリームを多重化し、HPACK でヘッダー圧縮。下の層は TCP＋TLS。TCP のパケットが 1 つ落ちると全ストリームが待つ（TCP レベルの Head-of-Line Blocking）。',
+        },
+        {
+          title: 'HTTP/3',
+          body: 'HTTP/2 とほぼ同じ意味論で、QPACK でヘッダー圧縮。下の層は QUIC（UDP＋TLS 1.3）。ストリームごとに独立しているので、落ちたストリームだけが待つ。',
+        },
+      ],
+    },
+  ],
   actors: [
     { id: 'c', name: 'ブラウザ', kidName: 'パソコンさん', icon: 'laptop' },
     { id: 's', name: 'Web サーバー（UDP 443）', kidName: 'サーバーさん', icon: 'server' },

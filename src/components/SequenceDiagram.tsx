@@ -159,6 +159,9 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
   const many = actors.length >= 4;
   const actorScale = many ? L.ACTOR_SCALE * 0.72 : L.ACTOR_SCALE;
 
+  // 見出しの説明文に使える横幅（隣のノードとの間隔）
+  const colWidth = actors.length > 1 ? (VB_W - GUTTER_L - GUTTER_R) / (actors.length - 1) - 10 : VB_W - 20;
+
   const selfLoopDir = (id: string) => (actors.length > 1 && actors[actors.length - 1].id === id ? -1 : 1);
 
   const rowY = (i: number) => HEADER + (i - 1) * ROW + LINE_OFFSET; // i は 1 始まり
@@ -201,7 +204,16 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
               const x = actorX.get(a.id)!;
               const [main, sub] = splitName(a.name);
               const title = kid ? a.kidName : main;
-              const caption = kid ? main : sub;
+              // 見出しの下の説明: 名前と同じなら出さない。狭い画面では「・」より前だけにする
+              let caption = kid ? main : sub;
+              if (caption === title) caption = undefined;
+              if (caption && L.compact) caption = caption.split('・')[0];
+              const captionSize = many ? 10 : 12;
+              const titleSize = many ? 12.5 : 16;
+              // 隣との間隔と、図の端までの距離の両方に収める
+              const room = Math.min(colWidth, 2 * Math.min(x, VB_W - x) - 6);
+              const fitTitle = estimateWidth(title, titleSize) > room ? room : undefined;
+              const fitCaption = caption && estimateWidth(caption, captionSize) > room ? room : undefined;
               return (
                 <g key={a.id}>
                   <line
@@ -217,10 +229,24 @@ export function SequenceDiagram({ protocol, mode, current, onSelect, travelMs }:
                   <g transform={`translate(${x - 50 * actorScale} 6) scale(${actorScale})`}>
                     <ActorIconShape kind={a.icon} />
                   </g>
-                  <text x={x} y={100 * actorScale + 26} textAnchor="middle" className={many ? 'actor-kid actor-many' : 'actor-kid'}>
+                  <text
+                    x={x}
+                    y={100 * actorScale + 26}
+                    textAnchor="middle"
+                    className={many ? 'actor-kid actor-many' : 'actor-kid'}
+                    textLength={fitTitle}
+                    lengthAdjust={fitTitle ? 'spacingAndGlyphs' : undefined}
+                  >
                     {title}
                   </text>
-                  <text x={x} y={100 * actorScale + 42} textAnchor="middle" className={many ? 'actor-tech actor-many' : 'actor-tech'}>
+                  <text
+                    x={x}
+                    y={100 * actorScale + 42}
+                    textAnchor="middle"
+                    className={many ? 'actor-tech actor-many' : 'actor-tech'}
+                    textLength={fitCaption}
+                    lengthAdjust={fitCaption ? 'spacingAndGlyphs' : undefined}
+                  >
                     {caption}
                   </text>
                 </g>

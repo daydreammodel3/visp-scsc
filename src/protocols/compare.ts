@@ -1,4 +1,5 @@
-import type { Protocol } from './types';
+import type { Protocol, Viz } from './types';
+import { H2_H3_STACKS } from './transportStacks';
 import { findProtocol } from './index';
 
 /** 2 つのプロトコルを並べて比べるプリセット */
@@ -12,6 +13,8 @@ export interface ComparePreset {
   right: string;
   /** 比較のポイント（大人向け / こども向け） */
   points: { adult: string; kid: string }[];
+  /** 表の上に出す図（プロトコルスタックなど） */
+  viz?: Viz;
   /** 表に追加する行（左, 右） */
   rows?: { label: string; kidLabel: string; left: string; right: string }[];
 }
@@ -137,6 +140,7 @@ comparePresets.push({
   kidTagline: 'でんわと かぎを べつべつに？ いっぺんに？',
   left: 'http2',
   right: 'http3',
+  viz: H2_H3_STACKS,
   rows: [
     { label: 'トランスポート', kidLabel: 'はこびかた', left: 'TCP（＋ TLS 1.3）', right: 'QUIC（UDP、TLS 1.3 を内蔵）' },
     { label: 'リクエストまでの往復', kidLabel: 'おねがい できるまで', left: '2-RTT（TCP 1 ＋ TLS 1）', right: '1-RTT（再接続なら 0-RTT も可）' },
@@ -145,6 +149,11 @@ comparePresets.push({
     { label: 'ヘッダー圧縮', kidLabel: 'みじかく する ほうほう', left: 'HPACK', right: 'QPACK' },
   ],
   points: [
+    {
+      adult:
+        'HTTP/2 → HTTP/3 の違いは主に速度。セキュリティの違いは、その下の「TCP＋TLS → QUIC」から来る。比較すべき層は 1 段下にあるので、なぜ安全になったかは「比較: TCP＋TLS と QUIC」で見る。',
+      kid: 'HTTP/2 と HTTP/3 の ちがいは おもに はやさ。あんぜんさの ちがいは、その したの「はこびかた」の ちがいから くるよ。',
+    },
     {
       adult: 'HTTP/3 は TCP の 3 ウェイハンドシェイクと TLS を QUIC の 1 回のハンドシェイクにまとめたので、リクエストを送れるまでが 1 往復短い。両方の図で GET の位置を比べてみよう。',
       kid: 'HTTP/3 は でんわと かぎを いっぺんに つくるから、1おうふく はやく おねがい できるよ。',
@@ -156,6 +165,39 @@ comparePresets.push({
     {
       adult: 'QUIC は UDP 上で動くため、UDP を遮断するネットワークでは使えず、ブラウザは HTTP/2 にフォールバックする。',
       kid: 'HTTP/3 が つかえない ばしょでは、HTTP/2 に もどして つかうよ。',
+    },
+  ],
+});
+
+comparePresets.push({
+  id: 'transport',
+  name: 'TCP＋TLS と QUIC',
+  kidName: 'TCP＋TLS と QUIC',
+  tagline: 'なぜ QUIC でセキュリティが上がるのか。往復回数とヘッダー保護の違い',
+  kidTagline: 'ふうとうの おもてまで まもるのは どっち？',
+  left: 'tcp-tls',
+  right: 'quic',
+  viz: H2_H3_STACKS,
+  rows: [
+    { label: 'リクエストまでの往復', kidLabel: 'おねがい できるまで', left: '2-RTT（TLS 1.2 なら 3-RTT）', right: '1-RTT（再接続なら 0-RTT）' },
+    { label: 'ヘッダー', kidLabel: 'ふうとうの おもて', left: 'TCP ヘッダーは平文（seq 番号・フラグ）', right: 'パケット番号を含め大部分を暗号化・認証' },
+    { label: '偽パケットの注入', kidLabel: 'にせの あいず', left: '偽 RST で切断できる', right: '認証に失敗して破棄される' },
+    { label: '暗号化', kidLabel: 'かぎ', left: 'TLS は別の層（TLS 1.2 も使える）', right: 'TLS 1.3 のみ・平文モードなし' },
+    { label: '送信元偽装への対策', kidLabel: 'にせの じゅうしょ', left: 'TCP のハンドシェイクで確認', right: '3 倍制限・Retry トークン・1200 バイト以上' },
+    { label: '防御側からの可視性', kidLabel: 'みはりからの みえかた', left: '高い（ヘッダーで状態が分かる）', right: '低い（UDP 443 を止めて TCP に戻す運用も）' },
+  ],
+  points: [
+    {
+      adult: '同じ「経路上の第三者」でも、TCP＋TLS では平文の TCP ヘッダーを使った偽 RST で接続を切れる。QUIC ではヘッダーまで認証されるので、注入したパケットは黙って捨てられる。両方の図の後半を比べてみよう。',
+      kid: 'おなじ イブの いたずらでも、TCP では でんわが きれて、QUIC では にせものだと ばれて すてられるよ。',
+    },
+    {
+      adult: '1-RTT になったのは、TCP と TLS の重複を暗号設計ごと統合したから。速くするために安全を削ったわけではない。',
+      kid: '2つの あいさつを 1つに まとめたから はやいんだ。あんぜんは けずっていないよ。',
+    },
+    {
+      adult: 'トレードオフ: 0-RTT はリプレイされうるので冪等なリクエストに限る。また防御側（ファイアウォール・IDS）からも中身や状態が見えにくくなる。',
+      kid: 'すぐ おくる おねがいは コピーされるかも。それに、みはる がわからも みえにくく なるよ。',
     },
   ],
 });

@@ -354,3 +354,66 @@ describe('Web（HTTP/2・HTTP/3・HTTPS）', () => {
     expect(find(see.protocol).steps[see.step! - 1].message).toContain('GET /');
   });
 });
+
+describe('パスキーと QUIC のセキュリティ', () => {
+  const find = (id: string) => protocols.find((p) => p.id === id)!;
+  const holds = (pid: string, step: number, actor: string) => inventoryAt(find(pid), step)[actor].map((h) => h.id);
+
+  it('パスキー: 秘密鍵は端末から出ず、RP は公開鍵だけを持つ', () => {
+    const p = find('passkey');
+    for (const id of ['br', 'rp']) expect(holds('passkey', p.steps.length, id)).not.toContain('priv');
+    expect(holds('passkey', p.steps.length, 'auth')).toContain('priv');
+    expect(holds('passkey', p.steps.length, 'rp')).toContain('pub');
+  });
+
+  it('パスキー: 登録 5 手・ログイン 5 手で、認証器と RP の間は必ずブラウザを経由する', () => {
+    const p = find('passkey');
+    expect(p.steps.filter((s) => s.phase === 'reg')).toHaveLength(5);
+    expect(p.steps.filter((s) => s.phase === 'login')).toHaveLength(5);
+    for (const s of p.steps)
+      if ([s.from, s.to].sort().join() === 'auth,rp') expect(s.via, s.id).toEqual(['br']);
+  });
+
+  it('パスキー: 署名は毎回ちがうチャレンジに対して行う（登録とログインで別の challenge）', () => {
+    const p = find('passkey');
+    const signAt = p.steps.findIndex((s) => s.id === 'sign') + 1;
+    expect(holds('passkey', signAt, 'br')).toEqual(expect.arrayContaining(['regChallenge', 'loginChallenge']));
+  });
+
+  it('TCP＋TLS: 経路上の第三者の偽 RST で接続が切れる', async () => {
+    const { statesAt } = await import('../lib/nodeStates');
+    const p = find('tcp-tls');
+    expect(statesAt(p, 6)!.c.state).toBe('ESTABLISHED');
+    expect(statesAt(p, p.steps.length)!.c.state).toBe('CLOSED');
+    expect(p.steps.some((s) => s.from === 'e' && s.to === 'c' && s.danger)).toBe(true);
+  });
+
+  it('QUIC: 最初のリクエストまでのメッセージ数が TCP＋TLS より少ない', () => {
+    const upToReq = (id: string, stepId: string) => {
+      const p = find(id);
+      const i = p.steps.findIndex((s) => s.id === stepId);
+      return p.steps.slice(0, i + 1).filter((s) => s.from !== s.to && s.from !== 'e').length;
+    };
+    expect(upToReq('tcp-tls', 'fin-req')).toBe(6);
+    expect(upToReq('quic', 'fin-req')).toBe(3);
+  });
+
+  it('QUIC: 注入は破棄され、イブは鍵を持たない', () => {
+    const p = find('quic');
+    const eve = holds('quic', p.steps.length, 'e');
+    expect(eve).not.toContain('keys');
+    expect(p.steps.find((s) => s.id === 'discard')!.danger).toBeFalsy();
+  });
+
+  it('解説（insights）は空でなく、こども向けの見出しがあるグループは各項目もこども向けの文を持つ', () => {
+    for (const p of protocols)
+      for (const g of p.insights ?? []) {
+        expect(g.items.length, `${p.id}/${g.id}`).toBeGreaterThan(0);
+        for (const it of g.items) {
+          expect(it.title.trim()).not.toBe('');
+          expect(it.body.trim()).not.toBe('');
+          if (g.kidHeading && g.id !== 'note') expect(it.kidBody, `${p.id}/${g.id}/${it.title}`).toBeTruthy();
+        }
+      }
+  });
+});

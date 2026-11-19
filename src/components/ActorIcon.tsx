@@ -62,6 +62,24 @@ export function ActorIconShape({ kind }: { kind: Kind }) {
           <circle cx="76" cy="69" r="9" fill="#d6f2ff" fillOpacity="0.85" stroke={INK} strokeWidth="3" />
         </g>
       );
+    case 'authenticator':
+      return (
+        <g>
+          {/* 認証器: 指紋マークのあるスマホ。秘密鍵をしまっている */}
+          <rect x="28" y="6" width="44" height="84" rx="10" fill="#fff1d6" stroke={INK} strokeWidth="3" />
+          <rect x="34" y="16" width="32" height="40" rx="5" fill="#fff" />
+          <Face cx={50} cy={34} s={0.75} />
+          <g fill="none" stroke="#b8650a" strokeWidth="2.2" strokeLinecap="round">
+            <path d="M42 76 a8 8 0 0 1 16 0" />
+            <path d="M45 77 a5 5 0 0 1 10 0" />
+            <path d="M38 75 a12 12 0 0 1 24 0" />
+            <path d="M50 74 v6" />
+          </g>
+          <circle cx="76" cy="18" r="9" fill="#ffd23f" stroke={INK} strokeWidth="2" />
+          <rect x="72.5" y="17" width="7" height="6" rx="1.5" fill={INK} />
+          <path d="M74 17 v-2 a2 2 0 0 1 4 0 v2" fill="none" stroke={INK} strokeWidth="1.6" />
+        </g>
+      );
     case 'router':
       return (
         <g>
