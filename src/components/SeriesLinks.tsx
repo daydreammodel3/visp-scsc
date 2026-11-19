@@ -3,7 +3,7 @@
  * いま開いているサイトはリンクにせず、太字で示す。
  */
 const SITES = [
-  { id: 'kmty', name: 'キーボードとマウスのひろば', note: 'kmty-SCSC', url: 'https://kmty.yythzy.com/' },
+  { id: 'kmty', name: 'キーマウひろば', note: 'キーボードとマウスのれんしゅうひろば（kmty-SCSC）', url: 'https://kmty.yythzy.com/' },
   { id: 'visa', name: 'アルゴリズムずかん', note: 'VISA-SCSC', url: 'https://visa.yythzy.com/' },
   { id: 'visp', name: 'ハンドシェイクずかん', note: 'VISP-SCSC', url: 'https://visp.yythzy.com/' },
 ] as const;
