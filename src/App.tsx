@@ -10,6 +10,7 @@ import { compareLength, parseHash, toHash } from './lib/route';
 import { CompareView } from './components/CompareView';
 import { comparePresets, findPreset } from './protocols/compare';
 import { UI, loadMode, saveMode, type Mode } from './lib/text';
+import { SeriesLinks } from './components/SeriesLinks';
 
 function loadNavPref(): boolean {
   try {
@@ -258,6 +259,7 @@ export default function App() {
             <abbr title="VISualize communication Protocols as Small, Cute, Stylized Characters.">VISP-SCSC</abbr> — <b>VIS</b>ualize
             communication <b>P</b>rotocols as <b>S</b>mall, <b>C</b>ute, <b>S</b>tylized <b>C</b>haracters.
           </p>
+          <SeriesLinks current="visp" />
         </div>
       </div>
     </div>
