@@ -210,6 +210,39 @@ comparePresets.push({
   ],
 });
 
+comparePresets.push({
+  id: 'wpa',
+  category: 'wifi',
+  name: 'WPA2 と WPA3（Personal）',
+  kidName: 'WPA2 と WPA3',
+  tagline: '同じパスワード方式でも、傍受されたときの強さが違う',
+  kidTagline: 'きろくされても だいじょうぶなのは どっち？',
+  left: 'wpa2',
+  right: 'wpa3',
+  rows: [
+    { label: '認証のしくみ', kidLabel: 'たしかめかた', left: 'PSK（事前共有鍵）＋ 4-Way Handshake', right: 'SAE ＋ 4-Way Handshake' },
+    { label: 'PMK', kidLabel: 'かぎの もと', left: 'パスワードから作る固定値', right: '接続ごとに新しい値' },
+    { label: 'オフライン辞書攻撃', kidLabel: 'いえで パスワードを ためせる？', left: 'できる（傍受した MIC で検証）', right: 'できない（毎回 AP とのやり取りが必要）' },
+    { label: '前方秘匿性', kidLabel: 'あとで ばれたら？', left: 'なし（後でパスワードが漏れると過去も読める）', right: 'あり' },
+    { label: 'PMF', kidLabel: 'にせの「きります」対策', left: '任意', right: '必須' },
+    { label: '6GHz 帯', kidLabel: 'あたらしい でんぱ', left: '使えない', right: '使える' },
+  ],
+  points: [
+    {
+      adult: 'どちらも同じ Wi-Fi パスワードを使うが、WPA2 は傍受した 4-Way Handshake でパスワード候補を手元で何度でも試せる。WPA3 の SAE は毎回の乱数を混ぜるので、それができない。両方の図の最後（イブの行動）を比べてみよう。',
+      kid: 'どちらも おなじ パスワードを つかうけど、WPA2 は きろくされると いえで ためされちゃう。WPA3 は ためせないよ。',
+    },
+    {
+      adult: 'WPA3 では接続ごとに PMK が変わるので、後でパスワードが漏れても過去の通信は解読できない（前方秘匿性）。同じ Wi-Fi の他の利用者に通信を読まれる心配も減る。',
+      kid: 'WPA3 は まいかい かぎの もとが かわるから、あとで パスワードが ばれても だいじょうぶ。',
+    },
+    {
+      adult: 'WPA2/WPA3 混在モードでは、WPA2 で接続した端末は WPA2 のセキュリティレベルで動作する。いずれにしても推測されにくいパスワードが必要。',
+      kid: 'どちらでも、ながくて あてにくい パスワードに しようね。',
+    },
+  ],
+});
+
 export function findPreset(id: string | undefined): ComparePreset | undefined {
   return comparePresets.find((p) => p.id === id);
 }

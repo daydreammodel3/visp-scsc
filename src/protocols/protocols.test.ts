@@ -434,3 +434,58 @@ describe('メニュー', () => {
     for (const c of comparePresets) expect(ids, c.id).toContain(c.category);
   });
 });
+
+describe('無線 LAN', () => {
+  const find = (id: string) => protocols.find((p) => p.id === id)!;
+  const holds = (pid: string, step: number, actor: string) => inventoryAt(find(pid), step)[actor].map((h) => h.id);
+
+  it('資料の章立ての順に並んでいる', () => {
+    const wifi = categories.find((c) => c.id === 'wifi')!;
+    expect(wifi.protocols.map((p) => p.id)).toEqual(['wifi-join', 'csma', 'hidden-node', 'wpa2', 'wpa3', 'evil-twin', 'deauth-pmf']);
+  });
+
+  it('つながるまで: 4-Way Handshake の後に「接続済み」、その後 DHCP', async () => {
+    const { statesAt } = await import('../lib/nodeStates');
+    const p = find('wifi-join');
+    const m4 = p.steps.findIndex((s) => s.id === 'm4') + 1;
+    expect(statesAt(p, m4)!.sta.state).toContain('接続済み');
+    expect(p.steps[m4].see?.protocol).toBe('dhcp');
+  });
+
+  it('WPA2: 盗聴者はパスワードを推測できる / WPA3: できない', () => {
+    expect(holds('wpa2', find('wpa2').steps.length, 'e')).toContain('pw');
+    const w3 = holds('wpa3', find('wpa3').steps.length, 'e');
+    expect(w3).not.toContain('pw');
+    expect(w3).not.toContain('pmk');
+  });
+
+  it('WPA2・WPA3 とも 4-Way Handshake は 4 メッセージ', () => {
+    for (const id of ['wpa2', 'wpa3']) expect(find(id).steps.filter((s) => s.message.startsWith('EAPOL-Key'))).toHaveLength(4);
+  });
+
+  it('CSMA/CA: 衝突したフレームは失われ、再送で成功する', async () => {
+    const { statesAt } = await import('../lib/nodeStates');
+    const p = find('csma');
+    expect(p.steps.filter((s) => s.lost)).toHaveLength(2);
+    expect(statesAt(p, p.steps.length)!.a.state).toBe('送信成功');
+  });
+
+  it('隠れ端末: CTS を聞いた B は待機する', async () => {
+    const { statesAt } = await import('../lib/nodeStates');
+    const p = find('hidden-node');
+    const cts = p.steps.findIndex((s) => s.id === 'cts') + 1;
+    expect(statesAt(p, cts)!.b.state).toContain('NAV');
+  });
+
+  it('Evil Twin: 偽 AP は平文を読めるが、HTTPS は暗号文しか得られない', () => {
+    const fake = holds('evil-twin', find('evil-twin').steps.length, 'fake');
+    expect(fake).toEqual(expect.arrayContaining(['plain', 'enc']));
+  });
+
+  it('PMF: PMF ありでは偽の切断要求のあとも接続が続く', async () => {
+    const { statesAt } = await import('../lib/nodeStates');
+    const p = find('deauth-pmf');
+    const r = p.steps.findIndex((s) => s.id === 'reject') + 1;
+    expect(statesAt(p, r)!.sta.state).toContain('PMF あり');
+  });
+});

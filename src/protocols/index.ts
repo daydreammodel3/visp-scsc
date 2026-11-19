@@ -24,6 +24,13 @@ import { http3 } from './http3';
 import { passkey } from './passkey';
 import { tcpTls } from './tcpTls';
 import { quic } from './quic';
+import { wifiJoin } from './wifiJoin';
+import { csma } from './csma';
+import { hiddenNode } from './hiddenNode';
+import { wpa2 } from './wpa2';
+import { wpa3 } from './wpa3';
+import { evilTwin } from './evilTwin';
+import { deauthPmf } from './deauthPmf';
 
 /**
  * 左メニューに並ぶカテゴリと、その中のプロトコル。
@@ -34,6 +41,13 @@ export const categories: Category[] = [
   { id: 'crypto', name: '暗号と鍵交換の基礎', kidName: 'あんごうの きほん', protocols: [symmetric, rsaKex, dh] },
   { id: 'cipher', name: '暗号アルゴリズム', kidName: 'あんごうの しくみ', protocols: [des, tdes, aes, pqc] },
   { id: 'basic', name: 'ネットワークの基本', kidName: 'ネットワークの きほん', protocols: [dhcp, arp, ping, dns, tcp] },
+  {
+    id: 'wifi',
+    name: '無線 LAN（Wi-Fi）',
+    kidName: 'むせん LAN（Wi-Fi）',
+    // 「無線 LAN の仕組みとセキュリティ」の章立て（基礎 → 通信制御 → セキュリティ）の順
+    protocols: [wifiJoin, csma, hiddenNode, wpa2, wpa3, evilTwin, deauthPmf],
+  },
   { id: 'web', name: 'Web（HTTP）', kidName: 'ホームページの しくみ', protocols: [http, https, http2, http3] },
   { id: 'secure', name: 'セキュア通信', kidName: 'ひみつの つうしん', protocols: [tls12, tls13, ssh, tcpTls, quic] },
   { id: 'auth', name: '認証', kidName: 'ほんにん かくにん', protocols: [passkey] },
