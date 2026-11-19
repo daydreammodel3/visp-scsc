@@ -1,0 +1,109 @@
+This repository is licensed under two licenses.
+
+  1. Source code ............................... MIT License
+  2. Lesson content and illustrations ........... CC BY 4.0
+
+SPDX-License-Identifier: MIT AND CC-BY-4.0
+
+このリポジトリは 2 つのライセンスで提供しています。
+
+  1. ソースコード ............................... MIT License
+  2. レッスンの文章と絵 ......................... CC BY 4.0（クリエイティブ・コモンズ 表示 4.0 国際）
+
+
+--------------------------------------------------------------------------------
+Scope / 対象
+--------------------------------------------------------------------------------
+
+2. Lesson content and illustrations (CC BY 4.0) means:
+   レッスンの文章と絵（CC BY 4.0）に当たるのは次のものです。
+
+   - The explanatory text of the lessons, comparisons and figures:
+     the human-readable strings in src/protocols/ (names, taglines,
+     introductions, step titles, summaries, explanations, field notes,
+     insights and comparison points, for both the adult and kids modes),
+     and the explanatory text in README.md.
+     レッスン・比較・図の説明文。src/protocols/ の中の、人が読むための
+     文字列（名前、説明、紹介文、各ステップの見出し・要約・解説、フィールドの
+     注記、まとめ欄、比較のポイント。大人向け・こども向けの両方）と、
+     README.md の説明文。
+
+   - The character and icon designs (the packet characters, the node
+     icons and the favicon): the drawings defined in
+     src/components/PacketBuddy.tsx, src/components/ActorIcon.tsx and
+     public/favicon.svg.
+     キャラクターとアイコンのデザイン（パケットのキャラクター、ノードの
+     アイコン、ファビコン）。src/components/PacketBuddy.tsx、
+     src/components/ActorIcon.tsx、public/favicon.svg に描かれている絵。
+
+1. Everything else in this repository, including the program code that
+   contains or renders the items above, is source code under the MIT License.
+   上記以外のすべて（上記の文字列や絵を含む・描画するプログラム部分を含む）は、
+   MIT License のソースコードです。
+
+Third-party material is not covered by these licenses and remains under its
+own terms: the npm dependencies (see package.json and their own licenses),
+the fonts loaded from Google Fonts, and the titles of RFCs, standards and other
+documents that are quoted or linked for reference.
+第三者のもの（npm の依存パッケージ、Google Fonts のフォント、参照・引用して
+いる RFC や規格などの文書名）はこのライセンスの対象外で、それぞれの条件に
+従います。
+
+
+--------------------------------------------------------------------------------
+Attribution example for CC BY 4.0 / CC BY 4.0 の表示の例
+--------------------------------------------------------------------------------
+
+  ハンドシェイクずかん（visp-scsc） https://visp.yythzy.com/ , CC BY 4.0
+
+When you modify the content, please indicate that changes were made.
+内容を変更した場合は、変更したことを示してください。
+
+
+--------------------------------------------------------------------------------
+1. MIT License (source code)
+--------------------------------------------------------------------------------
+
+MIT License
+
+Copyright (c) 2026 visp-scsc contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+--------------------------------------------------------------------------------
+2. Creative Commons Attribution 4.0 International (lesson content and illustrations)
+--------------------------------------------------------------------------------
+
+Copyright (c) 2026 visp-scsc contributors
+
+The lesson content and illustrations described above are licensed under the
+Creative Commons Attribution 4.0 International License (CC BY 4.0).
+
+  Summary (human-readable): https://creativecommons.org/licenses/by/4.0/
+  Legal code:               https://creativecommons.org/licenses/by/4.0/legalcode
+  日本語の概要:              https://creativecommons.org/licenses/by/4.0/deed.ja
+
+You are free to share and adapt the material for any purpose, even
+commercially, as long as you give appropriate credit, provide a link to the
+license, and indicate if changes were made. The full legal code at the URL
+above is the binding text.
+出典を表示し、ライセンスへのリンクを示し、変更した場合はその旨を示せば、
+営利目的を含め、自由に共有・改変できます。拘束力を持つのは上記 URL の
+法的コード（Legal code）の全文です。

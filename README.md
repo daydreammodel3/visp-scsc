@@ -2,6 +2,8 @@
 
 > **VIS**ualize communication **P**rotocols as **S**mall, **C**ute, **S**tylized **C**haracters.
 
+**公開ページ: https://visp.yythzy.com/**
+
 ネットワークプロトコルのハンドシェイクを、RFC の内容にそって **1手ずつ** たどれる学習用 Web アプリです。
 パケットはかわいいミニキャラで描かれています。説明は 2 モードあり、画面右上で切り替えられます。
 
@@ -80,6 +82,10 @@ npm test         # プロトコル定義の検証テスト
 npm run build    # 型チェック + 本番ビルド（dist/）
 ```
 
+## 学習用の暗号実装について
+
+`src/crypto/` の AES・DES・3DES・おもちゃの LWE は、途中経過を画面に表示するための学習用の実装です。定数時間処理などの安全対策をしていないため、**実際のデータの暗号化には絶対に使わないでください。** 実運用では、各言語・OS の標準の暗号ライブラリ（Web Crypto API など）を使ってください。
+
 ## Vercel へのデプロイ
 
 Vite の静的サイトなので、リポジトリを Vercel にインポートするだけで動きます（`vercel.json` 同梱）。
@@ -120,3 +126,14 @@ src/
   lib/         RFC リンク生成、URL ハッシュ、アニメーション用フック
   protocols/compare.ts  比較表示のプリセット
 ```
+
+## ライセンス
+
+- **ソースコード**: [MIT License](LICENSE)
+- **レッスンの文章と絵**（`src/protocols/` の説明文、`PacketBuddy.tsx`・`ActorIcon.tsx`・`favicon.svg` のキャラクターとアイコン、この README の説明文）: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.ja)
+
+対象の範囲や表示の例は [LICENSE](LICENSE) を見てください。CC BY 4.0 の表示の例:
+
+> ハンドシェイクずかん（visp-scsc） https://visp.yythzy.com/ , CC BY 4.0
+
+npm の依存パッケージ、Google Fonts のフォント、参照している RFC や規格などの文書は、それぞれの条件に従います。
