@@ -13,6 +13,8 @@ export interface ComparePreset {
   right: string;
   /** 比較のポイント（大人向け / こども向け） */
   points: { adult: string; kid: string }[];
+  /** メニューでどのカテゴリの中に並べるか（categories の id） */
+  category: string;
   /** 表の上に出す図（プロトコルスタックなど） */
   viz?: Viz;
   /** 表に追加する行（左, 右） */
@@ -22,7 +24,8 @@ export interface ComparePreset {
 export const comparePresets: ComparePreset[] = [
   {
     id: 'tls',
-    name: 'TLS 1.2 と TLS 1.3',
+    category: 'secure',
+        name: 'TLS 1.2 と TLS 1.3',
     kidName: 'TLS 1.2 と 1.3',
     tagline: '往復回数・暗号化の範囲・鍵交換の違い',
     kidTagline: 'あたらしい ほうが はやくて あんぜん',
@@ -50,7 +53,8 @@ export const comparePresets: ComparePreset[] = [
   },
   {
     id: 'kex',
-    name: 'RSA 鍵輸送と Diffie-Hellman',
+    category: 'crypto',
+        name: 'RSA 鍵輸送と Diffie-Hellman',
     kidName: 'RSA と ディフィー・ヘルマン',
     tagline: '鍵を「送る」か「一緒に作る」か。前方秘匿性の違い',
     kidTagline: 'かぎを おくる？ いっしょに つくる？',
@@ -78,7 +82,8 @@ export const comparePresets: ComparePreset[] = [
   },
   {
     id: 'cipher',
-    name: 'DES と AES',
+    category: 'cipher',
+        name: 'DES と AES',
     kidName: 'DES と AES',
     tagline: '鍵長・ブロック長・構造の違い',
     kidTagline: 'むかしの あんごうと いまの あんごう',
@@ -107,7 +112,8 @@ export const comparePresets: ComparePreset[] = [
   },
   {
     id: 'pq',
-    name: 'Diffie-Hellman と ML-KEM',
+    category: 'cipher',
+        name: 'Diffie-Hellman と ML-KEM',
     kidName: 'ディフィー・ヘルマンと ML-KEM',
     tagline: '量子コンピューターへの耐性とデータサイズの違い',
     kidTagline: 'いまの かぎの わたしかたと みらいの わたしかた',
@@ -134,7 +140,8 @@ export const comparePresets: ComparePreset[] = [
 
 comparePresets.push({
   id: 'h2h3',
-  name: 'HTTP/2 と HTTP/3',
+  category: 'web',
+    name: 'HTTP/2 と HTTP/3',
   kidName: 'HTTP/2 と HTTP/3',
   tagline: 'TCP＋TLS と QUIC。接続までの往復と、パケット消失の影響',
   kidTagline: 'でんわと かぎを べつべつに？ いっぺんに？',
@@ -171,7 +178,8 @@ comparePresets.push({
 
 comparePresets.push({
   id: 'transport',
-  name: 'TCP＋TLS と QUIC',
+  category: 'secure',
+    name: 'TCP＋TLS と QUIC',
   kidName: 'TCP＋TLS と QUIC',
   tagline: 'なぜ QUIC でセキュリティが上がるのか。往復回数とヘッダー保護の違い',
   kidTagline: 'ふうとうの おもてまで まもるのは どっち？',

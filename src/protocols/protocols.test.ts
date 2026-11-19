@@ -427,3 +427,10 @@ describe('難しさ', () => {
     expect(easy).toEqual(expect.arrayContaining(['web', 'symmetric', 'dh', 'dhcp', 'dns', 'tcp', 'http', 'https', 'passkey']));
   });
 });
+
+describe('メニュー', () => {
+  it('比較はすべて、存在するカテゴリの中に置かれている', () => {
+    const ids = new Set(categories.map((c) => c.id));
+    for (const c of comparePresets) expect(ids, c.id).toContain(c.category);
+  });
+});

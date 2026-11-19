@@ -1350,3 +1350,89 @@ button {
 .msg-label.msg-label-2 {
   font-size: 13px;
 }
+
+/* メニューの検索・絞り込み・折りたたみ */
+.nav-tools {
+  display: grid;
+  gap: 6px;
+  margin: 0 2px 10px;
+}
+.nav-search {
+  width: 100%;
+  font: inherit;
+  font-size: 0.85rem;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  padding: 6px 10px;
+  background: #fffdf9;
+  color: var(--ink);
+}
+.nav-search:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.nav-tool-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.nav-chip {
+  border: 2px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 1px 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+.nav-chip.on {
+  border-color: #2ecc71;
+  background: #e7f8ef;
+  color: #18794e;
+}
+.nav-empty {
+  margin: 8px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+.nav-heading .nav-group-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  padding: 2px 0;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+}
+.nav-group-toggle:disabled {
+  cursor: default;
+}
+.nav-caret {
+  width: 1em;
+  color: var(--ink-soft);
+}
+.nav-heading-text {
+  flex: 1;
+}
+.nav-count {
+  font-size: 0.68rem;
+  background: #f1eadf;
+  border-radius: 999px;
+  padding: 0 7px;
+  letter-spacing: 0;
+}
+.nav-compare-mark {
+  display: inline-block;
+  font-size: 0.62rem;
+  font-weight: 800;
+  background: #d6f2ff;
+  color: #13658a;
+  border-radius: 6px;
+  padding: 0 5px;
+  margin-right: 6px;
+  vertical-align: 2px;
+}
