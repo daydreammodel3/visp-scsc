@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "license": "MIT AND CC-BY-4.0",
+  "author": "YYTHZYテクノロジー",
   "type": "module",
   "scripts": {
     "dev": "vite",
