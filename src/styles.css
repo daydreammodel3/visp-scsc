@@ -1491,3 +1491,33 @@ button {
   font-size: 0.8rem;
   font-weight: 800;
 }
+
+/* SCSC シリーズの相互リンク（3 サイトで同じ。クレジットの下に小さく出す） */
+.series {
+  margin: -8px 0 16px;
+  padding: 0 16px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 10px;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+.series-label {
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+.series a {
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+.series a:hover {
+  color: var(--accent-ink);
+  text-decoration-color: currentColor;
+}
+.series [aria-current] {
+  font-weight: 800;
+  color: var(--ink);
+}
