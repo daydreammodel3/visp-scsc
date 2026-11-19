@@ -272,7 +272,7 @@ describe('TCP と シナリオ', () => {
   });
   it('シナリオ: DHCP → ARP → DNS → TCP → TLS → HTTP の順', () => {
     const order = find('web').steps.map((s) => s.phase).filter((p, i, a) => a.indexOf(p) === i);
-    expect(order).toEqual(['dhcp', 'arp', 'dns', 'tcp', 'tls', 'http', 'render']);
+    expect(order).toEqual(['wifi', 'dhcp', 'arp', 'dns', 'tcp', 'tls', 'http', 'render']);
   });
   it('シナリオ: PC は最後にページとセッション鍵を持つ', () => {
     const web = find('web');
@@ -441,7 +441,19 @@ describe('無線 LAN', () => {
 
   it('資料の章立ての順に並んでいる', () => {
     const wifi = categories.find((c) => c.id === 'wifi')!;
-    expect(wifi.protocols.map((p) => p.id)).toEqual(['wifi-join', 'csma', 'hidden-node', 'wpa2', 'wpa3', 'evil-twin', 'deauth-pmf']);
+    expect(wifi.protocols.map((p) => p.id)).toEqual([
+      'wifi-join',
+      'dfs',
+      'roaming',
+      'csma',
+      'hidden-node',
+      'wpa2',
+      'wpa3',
+      'wpa-enterprise',
+      'evil-twin',
+      'owe',
+      'deauth-pmf',
+    ]);
   });
 
   it('つながるまで: 4-Way Handshake の後に「接続済み」、その後 DHCP', async () => {
@@ -487,5 +499,46 @@ describe('無線 LAN', () => {
     const p = find('deauth-pmf');
     const r = p.steps.findIndex((s) => s.id === 'reject') + 1;
     expect(statesAt(p, r)!.sta.state).toContain('PMF あり');
+  });
+});
+
+describe('無線 LAN（第 2 弾）', () => {
+  const find = (id: string) => protocols.find((p) => p.id === id)!;
+  const holds = (pid: string, step: number, actor: string) => inventoryAt(find(pid), step)[actor].map((h) => h.id);
+
+  it('OWE: Open では盗聴者が平文を得るが、OWE では暗号文と公開鍵だけ', () => {
+    const e = holds('owe', find('owe').steps.length, 'e');
+    expect(e).toEqual(expect.arrayContaining(['plain', 'pubS', 'pubA', 'enc']));
+    expect(e).not.toContain('pmk');
+  });
+
+  it('Enterprise: 端末と RADIUS の EAP は必ず AP を経由し、MSK は AP にも渡る', () => {
+    const p = find('wpa-enterprise');
+    for (const s of p.steps) if ([s.from, s.to].sort().join() === 'radius,sta') expect(s.via, s.id).toEqual(['ap']);
+    expect(holds('wpa-enterprise', p.steps.length, 'ap')).toContain('msk');
+  });
+
+  it('DFS: レーダー検知後に ch36 へ移り、ch100 は使用不可になる', async () => {
+    const { statesAt } = await import('../lib/nodeStates');
+    const p = find('dfs');
+    expect(statesAt(p, p.steps.length)!.ap.state).toContain('ch36');
+    expect(statesAt(p, p.steps.length)!.ap.state).toContain('ch100 は 30 分使用不可');
+  });
+
+  it('ローミング: 802.11r では 4-Way Handshake なしで完了する', async () => {
+    const { statesAt } = await import('../lib/nodeStates');
+    const p = find('roaming');
+    const ft = p.steps.filter((s) => s.phase === 'ft');
+    expect(ft.some((s) => s.message.startsWith('4-Way'))).toBe(false);
+    expect(statesAt(p, p.steps.length)!.sta.state).toContain('4-Way Handshake なし');
+  });
+
+  it('シナリオ: Wi-Fi の鍵ができてから DHCP に進む', () => {
+    const web = find('web');
+    const k = web.steps.findIndex((s) => s.gives?.pc?.includes('wifiKey'));
+    const d = web.steps.findIndex((s) => s.id === 'discover');
+    expect(k).toBeGreaterThanOrEqual(0);
+    expect(k).toBeLessThan(d);
+    expect(find('wifi-join').steps.at(-1)!.see).toEqual({ protocol: 'web', step: d + 1 });
   });
 });

@@ -18,7 +18,7 @@ export type Accessory =
   | 'ticket' // 次回用のチケット
   | 'moon'; // おしまい・切断
 
-export type ActorIcon = 'laptop' | 'server' | 'router' | 'eve' | 'authenticator';
+export type ActorIcon = 'laptop' | 'server' | 'router' | 'eve' | 'authenticator' | 'radar';
 
 export interface Actor {
   id: string;
@@ -75,6 +75,21 @@ export type Viz =
       caption?: string;
     }
   | {
+      kind: 'bars';
+      /** マス目の数で比べる棒グラフ（チャネル数・チャネル幅など）。1 マス = unit */
+      rows: { label: string; sub?: string; value: number; display?: string; hl?: boolean }[];
+      caption?: string;
+    }
+  | {
+      kind: 'spectrum';
+      /** 周波数の重なり（2.4GHz 帯のチャネルなど）。channels 本を 1 番から並べ、各チャネルは span 本ぶんの幅を持つ */
+      channels: number;
+      span: number;
+      highlight: number[];
+      title?: string;
+      caption?: string;
+    }
+  | {
       kind: 'stacks';
       /** プロトコルスタックを左右に並べる（上が上位層）。hl の層を強調 */
       stacks: { title: string; layers: { label: string; note?: string; hl?: boolean }[] }[];
@@ -99,6 +114,8 @@ export interface InsightGroup {
   id: string;
   heading: string;
   kidHeading?: string;
+  /** グループの上に出す図 */
+  viz?: Viz;
   items: Insight[];
 }
 
@@ -177,8 +194,8 @@ export interface Protocol {
   rfcs: { rfc: number; title: string }[];
   /** RFC 以外の規格（FIPS など） */
   standards?: (DocRef & { title: string })[];
-  /** 紹介画面に出す図（プロトコルスタックなど） */
-  introViz?: Viz;
+  /** 紹介画面に出す図（プロトコルスタックなど）。複数並べることもできる */
+  introViz?: Viz | Viz[];
   /** 紹介画面と最後のステップに出す解説（なぜ安全か・トレードオフなど） */
   insights?: InsightGroup[];
   kidIntro: string;

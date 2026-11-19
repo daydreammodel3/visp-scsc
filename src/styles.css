@@ -1436,3 +1436,58 @@ button {
   margin-right: 6px;
   vertical-align: 2px;
 }
+
+/* チャネル数などの棒グラフ */
+.viz-bars {
+  display: grid;
+  gap: 6px;
+}
+.viz-bar {
+  display: grid;
+  grid-template-columns: minmax(6.5em, auto) 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+.viz-bar-label {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  font-size: 0.8rem;
+}
+.viz-bar-label small {
+  font-size: 0.66rem;
+  color: var(--ink-soft);
+}
+.viz-bar-cells {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+.viz-bar-cells i {
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  background: #ece4d6;
+}
+.viz-bar-cells i.on {
+  background: #54a0ff;
+}
+.viz-bar.hl .viz-bar-cells i.on {
+  background: var(--accent);
+}
+.viz-bar-value {
+  font-weight: 800;
+  font-size: 0.85rem;
+  min-width: 3.5em;
+  text-align: right;
+}
+.viz-spectrum {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.viz-spectrum-title {
+  margin: 0 0 2px;
+  font-size: 0.8rem;
+  font-weight: 800;
+}

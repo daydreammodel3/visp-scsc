@@ -80,6 +80,18 @@ export function ActorIconShape({ kind }: { kind: Kind }) {
           <path d="M74 17 v-2 a2 2 0 0 1 4 0 v2" fill="none" stroke={INK} strokeWidth="1.6" />
         </g>
       );
+    case 'radar':
+      return (
+        <g>
+          {/* 気象レーダー: 台の上のおわん型アンテナ */}
+          <rect x="34" y="62" width="32" height="26" rx="5" fill="#e3f3ea" stroke={INK} strokeWidth="3" />
+          <Face cx={50} cy={74} s={0.6} />
+          <path d="M50 62 V48" stroke={INK} strokeWidth="3" />
+          <path d="M22 30 Q50 64 78 30 Z" fill="#dff3ff" stroke={INK} strokeWidth="3" strokeLinejoin="round" />
+          <circle cx="50" cy="34" r="4" fill="#ffd23f" stroke={INK} strokeWidth="2" />
+          <path d="M62 14 q8 4 8 12 M70 8 q12 6 12 20" fill="none" stroke="#e5484d" strokeWidth="2.5" strokeLinecap="round" />
+        </g>
+      );
     case 'router':
       return (
         <g>

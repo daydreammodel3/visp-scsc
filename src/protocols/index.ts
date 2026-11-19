@@ -31,6 +31,10 @@ import { wpa2 } from './wpa2';
 import { wpa3 } from './wpa3';
 import { evilTwin } from './evilTwin';
 import { deauthPmf } from './deauthPmf';
+import { dfs } from './dfs';
+import { roaming } from './roaming';
+import { owe } from './owe';
+import { enterprise } from './enterprise';
 
 /**
  * 左メニューに並ぶカテゴリと、その中のプロトコル。
@@ -45,8 +49,8 @@ export const categories: Category[] = [
     id: 'wifi',
     name: '無線 LAN（Wi-Fi）',
     kidName: 'むせん LAN（Wi-Fi）',
-    // 「無線 LAN の仕組みとセキュリティ」の章立て（基礎 → 通信制御 → セキュリティ）の順
-    protocols: [wifiJoin, csma, hiddenNode, wpa2, wpa3, evilTwin, deauthPmf],
+    // 「無線 LAN の仕組みとセキュリティ」の章立て（基礎 → 接続と設計 → 通信制御 → セキュリティ）の順
+    protocols: [wifiJoin, dfs, roaming, csma, hiddenNode, wpa2, wpa3, enterprise, evilTwin, owe, deauthPmf],
   },
   { id: 'web', name: 'Web（HTTP）', kidName: 'ホームページの しくみ', protocols: [http, https, http2, http3] },
   { id: 'secure', name: 'セキュア通信', kidName: 'ひみつの つうしん', protocols: [tls12, tls13, ssh, tcpTls, quic] },

@@ -258,7 +258,7 @@ export const wifiJoin: Protocol = {
       detail:
         '「Wi-Fi 接続済み」は無線区間（端末〜AP）の接続ができたことを示すだけ。Web が開けないときは、IP アドレスが取れているか（DHCP）、名前解決できるか（DNS）、ルーターや上位回線に障害がないかを切り分ける。',
       fields: [{ name: '確認する順番の例', value: 'IP アドレス → デフォルトゲートウェイへの ping → DNS → 上位回線' }],
-      see: { protocol: 'web', step: 1 },
+      see: { protocol: 'web', step: 4 },
     },
   ],
   insights: [

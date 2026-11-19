@@ -172,7 +172,9 @@ function Intro({ protocol, mode }: { protocol: Protocol; mode: Mode }) {
         {kid && protocol.level >= 2 && <small> おとなの ひとと いっしょに みてね</small>}
       </p>
       <p className={kid ? 'kid-text' : 'pro-text'}>{kid ? protocol.kidIntro : protocol.intro}</p>
-      {protocol.introViz && <VizView viz={protocol.introViz} kid={kid} />}
+      {[protocol.introViz ?? []].flat().map((v, i) => (
+        <VizView key={i} viz={v} kid={kid} />
+      ))}
 
       <dl className="intro-meta">
         <dt>{ui.nodes}</dt>

@@ -1,5 +1,6 @@
 import type { InsightGroup } from '../protocols/types';
 import type { Mode } from '../lib/text';
+import { VizView } from './VizView';
 
 /** ステップにならない解説（なぜ安全か・トレードオフ・実演など）をカードで並べる */
 export function InsightPanel({ groups, mode }: { groups?: InsightGroup[]; mode: Mode }) {
@@ -11,6 +12,7 @@ export function InsightPanel({ groups, mode }: { groups?: InsightGroup[]; mode: 
       {shown.map((g) => (
         <section key={g.id} className="insight-group" aria-label={kid ? g.kidHeading : g.heading}>
           <h3>{kid ? g.kidHeading : g.heading}</h3>
+          {g.viz && <VizView viz={g.viz} kid={kid} />}
           <div className="insight-cards">
             {g.items.map((it) => {
               const vs = kid ? (it.kidVs ?? it.vs) : it.vs;
